@@ -40,7 +40,7 @@ export function BottomNav({
               </span>
               <span
                 className={cn(
-                  "text-[10.5px] font-medium tracking-wide transition-colors",
+                  "text-[11px] font-medium tracking-wide transition-colors",
                   isActive ? "text-ink" : "text-ink-3"
                 )}
               >
@@ -91,14 +91,13 @@ function DiscoverGlyph() {
 }
 
 function LoopsGlyph() {
+  // Linked circles — echoes the LoopMark and the product name.
+  // Speech bubbles collapsed Loops into "generic chat"; linked circles
+  // hold the "small group / shared loop" meaning.
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <path
-        d="M6 5.5 h7.5 a3.5 3.5 0 0 1 0 7 h-4 l-3 3 v-3 h-0.5 a3.5 3.5 0 0 1 0-7 z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
+      <circle cx="8" cy="11" r="4.4" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="14" cy="11" r="4.4" stroke="currentColor" strokeWidth="1.6" />
     </svg>
   )
 }

@@ -431,12 +431,19 @@ export const topics: Topic[] = [
   { id: "your-industry", label: "Your industry", size: "md", hue: "signal", newCount: 7, position: { x: 50, y: 88 } },
 ]
 
+export type BlindspotFraming = {
+  // The name describes the framing's lens, not the speaker's politics.
+  // Lean is shown as a small chip; the column header is the lens.
+  name: string
+  lean: Source["lean"]
+  text: string
+}
+
 export type Blindspot = {
   id: string
   headline: string
   takeaway: string
-  leftFraming: string
-  rightFraming: string
+  framings: [BlindspotFraming, BlindspotFraming]
 }
 
 export const blindspots: Blindspot[] = [
@@ -445,10 +452,20 @@ export const blindspots: Blindspot[] = [
     headline: "You've been reading mostly centrist sources this week.",
     takeaway:
       "Here's how the same three stories are getting framed at the edges.",
-    leftFraming:
-      "On the AI bill: 'a giveaway to the largest labs, dressed up as oversight.'",
-    rightFraming:
-      "On the AI bill: 'compute thresholds are a backdoor to picking winners.'",
+    framings: [
+      {
+        name: "Regulatory-capture lens",
+        lean: "left",
+        text:
+          "On the AI bill: 'a giveaway to the largest labs, dressed up as oversight.'",
+      },
+      {
+        name: "Picking-winners lens",
+        lean: "right",
+        text:
+          "On the AI bill: 'compute thresholds are a backdoor to picking winners.'",
+      },
+    ],
   },
 ]
 

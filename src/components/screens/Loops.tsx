@@ -50,7 +50,10 @@ function LoopsList({ onOpen }: { onOpen: (id: string) => void }) {
             Small group, big takes.
           </h1>
         </div>
-        <button className="w-9 h-9 rounded-full bg-ink text-paper flex items-center justify-center">
+        <button
+          className="w-9 h-9 rounded-full bg-ink text-paper flex items-center justify-center"
+          aria-label="New Loop"
+        >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             <path
               d="M7 2 v10 M2 7 h10"
@@ -62,7 +65,7 @@ function LoopsList({ onOpen }: { onOpen: (id: string) => void }) {
         </button>
       </div>
 
-      <p className="px-5 text-[12.5px] text-ink-2 mb-5 max-w-[300px] text-pretty">
+      <p className="px-5 text-[13px] text-ink-2 mb-5 max-w-[300px] text-pretty">
         Up to 12 friends per Loop. Stories arrive with context. No public feed.
       </p>
 
@@ -80,24 +83,24 @@ function LoopsList({ onOpen }: { onOpen: (id: string) => void }) {
             <LoopGlyph loop={loop} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <span className="text-[14.5px] font-semibold text-ink truncate">
+                <span className="text-[15px] font-semibold text-ink truncate">
                   {loop.name}
                 </span>
-                <span className="text-[10.5px] text-ink-3 tabular flex-shrink-0 ml-2">
+                <span className="text-[11.5px] text-ink-3 tabular flex-shrink-0 ml-2">
                   {loop.lastMessage.timeAgo}
                 </span>
               </div>
-              <div className="text-[12.5px] text-ink-2 truncate mt-0.5">
+              <div className="text-[13px] text-ink-2 truncate mt-0.5">
                 <span className="text-ink-3">{loop.lastMessage.person}: </span>
                 {loop.lastMessage.snippet}
               </div>
               <div className="flex items-center gap-2 mt-1.5">
                 <MemberStack members={loop.members.slice(0, 4)} />
-                <span className="text-[10.5px] text-ink-3">
+                <span className="text-[11.5px] text-ink-3">
                   {loop.members.length} members
                 </span>
                 {loop.unread > 0 && (
-                  <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-signal text-paper text-[10px] font-semibold px-1.5 tabular">
+                  <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-ink text-paper text-[11px] font-semibold px-1.5 tabular">
                     {loop.unread}
                   </span>
                 )}
@@ -108,10 +111,10 @@ function LoopsList({ onOpen }: { onOpen: (id: string) => void }) {
       </div>
 
       <div className="mx-5 mt-6 rounded-2xl bg-paper-2 ring-1 ring-paper-3/70 p-4">
-        <div className="text-[10.5px] font-medium tracking-[0.16em] uppercase text-ink-3 mb-1.5">
+        <div className="text-[11px] font-medium tracking-[0.16em] uppercase text-ink-3 mb-1.5">
           Why Loops are small
         </div>
-        <p className="text-[12.5px] text-ink-2 leading-snug text-pretty">
+        <p className="text-[13px] text-ink-2 leading-snug text-pretty">
           Capped at 12 people so the dynamic stays group-chat, not group-feed. No
           likes, no view counts. Stories travel with their sources attached.
         </p>
@@ -121,8 +124,10 @@ function LoopsList({ onOpen }: { onOpen: (id: string) => void }) {
 }
 
 function LoopGlyph({ loop }: { loop: Loop }) {
+  // Loops are brand objects, not Margin — keep them in the ink family so violet
+  // continues to mean "AI" / "active state" / "focal CTA" elsewhere.
   return (
-    <div className="w-12 h-12 rounded-2xl bg-signal-soft flex items-center justify-center text-signal font-display text-[22px] leading-none">
+    <div className="w-12 h-12 rounded-2xl bg-ink/8 ring-1 ring-ink/10 flex items-center justify-center text-ink font-display text-[22px] leading-none">
       {loop.glyph}
     </div>
   )
@@ -134,7 +139,7 @@ function MemberStack({ members }: { members: { name: string; avatar: string }[] 
       {members.map((m, i) => (
         <span
           key={i}
-          className="w-5 h-5 rounded-full bg-ember-soft ring-2 ring-paper-2 text-ember text-[9px] font-semibold flex items-center justify-center"
+          className="w-5 h-5 rounded-full bg-ink/8 ring-2 ring-paper-2 text-ink text-[9.5px] font-semibold flex items-center justify-center"
         >
           {m.avatar}
         </span>
@@ -168,14 +173,14 @@ function LoopChat({ loop, onBack }: { loop: Loop; onBack: () => void }) {
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-signal text-[14px] font-display">
+            <span className="text-ink text-[14px] font-display">
               {loop.glyph}
             </span>
             <span className="font-display text-[18px] tracking-tight text-ink truncate">
               {loop.name}
             </span>
           </div>
-          <div className="text-[11px] text-ink-3">
+          <div className="text-[11.5px] text-ink-3">
             {loop.members.length} members ·{" "}
             {loop.members
               .filter((m) => m.name !== "You")
@@ -195,15 +200,15 @@ function LoopChat({ loop, onBack }: { loop: Loop; onBack: () => void }) {
       </div>
 
       {pinnedStory && (
-        <div className="mx-4 mt-3 mb-1 p-3 rounded-2xl bg-signal-soft ring-1 ring-signal/20 flex items-start gap-2.5">
-          <div className="mt-0.5 text-signal">
+        <div className="mx-4 mt-3 mb-1 p-3 rounded-2xl bg-paper-2 ring-1 ring-paper-3 flex items-start gap-2.5">
+          <div className="mt-0.5 text-ink-2">
             <PinGlyph />
           </div>
           <div className="flex-1">
-            <div className="text-[10.5px] font-medium tracking-[0.14em] uppercase text-signal mb-0.5">
+            <div className="text-[11px] font-medium tracking-[0.14em] uppercase text-ink-3 mb-0.5">
               What we're tracking
             </div>
-            <div className="text-[12.5px] text-ink leading-snug font-medium text-pretty">
+            <div className="text-[13px] text-ink leading-snug font-medium text-pretty">
               {pinnedStory.headline}
             </div>
           </div>
@@ -255,11 +260,11 @@ function Message({ message, isYou }: { message: LoopMessage; isYou: boolean }) {
           )}
         >
           {!isYou && (
-            <div className="text-[10.5px] font-semibold text-signal mb-0.5">
+            <div className="text-[11px] font-semibold text-ink-2 mb-0.5">
               {message.from}
             </div>
           )}
-          <div className="text-[13.5px] leading-snug text-pretty">
+          <div className="text-[14px] leading-snug text-pretty">
             {message.text}
           </div>
         </div>
@@ -274,17 +279,17 @@ function Message({ message, isYou }: { message: LoopMessage; isYou: boolean }) {
       <div className="flex gap-2">
         <AvatarSmall letter={message.avatar} />
         <div className="max-w-[82%] rounded-2xl rounded-tl-md bg-paper-2 ring-1 ring-paper-3/70 p-3">
-          <div className="text-[10.5px] font-semibold text-signal mb-1">
+          <div className="text-[11px] font-semibold text-ink-2 mb-1">
             {message.from} shared
           </div>
           <div className="rounded-xl bg-paper p-3 ring-1 ring-paper-3/60">
-            <div className="text-[10px] font-medium tracking-[0.14em] uppercase text-ink-3 mb-1">
+            <div className="text-[11px] font-medium tracking-[0.14em] uppercase text-ink-3 mb-1">
               {story.category}
             </div>
             <div className="font-display text-[15px] leading-tight text-ink text-balance">
               {story.headline}
             </div>
-            <div className="mt-2 flex items-center gap-1.5 text-[10.5px] text-ink-3">
+            <div className="mt-2 flex items-center gap-1.5 text-[11.5px] text-ink-3">
               <span>{story.sources.length} sources</span>
               <span>·</span>
               <span>{story.readMinutes} min</span>
@@ -296,27 +301,29 @@ function Message({ message, isYou }: { message: LoopMessage; isYou: boolean }) {
   }
 
   if (message.kind === "margin-card") {
+    // Margin cards are the one place violet earns its keep inside chat —
+    // they ARE the AI surface. Keep the soft tint + sparkle.
     return (
       <div className={cn("flex gap-2", isYou && "flex-row-reverse")}>
         {!isYou && <AvatarSmall letter={message.avatar} />}
         <div className="max-w-[88%] rounded-2xl bg-paper-2 ring-1 ring-signal/30 p-3">
           <div className="flex items-center gap-1.5 mb-1.5">
-            <span className="inline-flex items-center gap-1 rounded-md bg-signal-soft px-1.5 py-0.5 text-[9.5px] font-bold tracking-[0.12em] uppercase text-signal">
+            <span className="inline-flex items-center gap-1 rounded-md bg-signal-soft px-1.5 py-0.5 text-[10.5px] font-bold tracking-[0.12em] uppercase text-signal">
               <MarginSparkle />
               Margin
             </span>
-            <span className="text-[10.5px] text-ink-3">
+            <span className="text-[11.5px] text-ink-3">
               {message.from} asked
             </span>
           </div>
-          <div className="text-[12.5px] font-medium text-ink mb-2 text-pretty">
+          <div className="text-[13px] font-medium text-ink mb-2 text-pretty">
             "{message.question}"
           </div>
           <div className="rounded-xl bg-paper p-2.5 ring-1 ring-paper-3/60">
-            <div className="text-[12px] text-ink leading-snug text-pretty">
+            <div className="text-[13px] text-ink leading-snug text-pretty">
               {message.answer}
             </div>
-            <div className="mt-2 flex items-center gap-1.5 text-[10px] text-ink-3">
+            <div className="mt-2 flex items-center gap-1.5 text-[11px] text-ink-3">
               <span className="inline-flex items-center gap-0.5 rounded bg-signal-soft px-1 py-0.5 text-signal font-semibold">
                 {message.sourceCount} cites
               </span>
@@ -344,8 +351,9 @@ function MarginSparkle() {
 }
 
 function AvatarSmall({ letter }: { letter: string }) {
+  // Friend avatars in chat — keep them in the ink family. Violet stays Margin.
   return (
-    <div className="w-7 h-7 rounded-full bg-signal/15 ring-1 ring-signal/30 flex items-center justify-center text-signal font-semibold text-[11px] flex-shrink-0 mt-auto">
+    <div className="w-7 h-7 rounded-full bg-ink/8 ring-1 ring-ink/12 flex items-center justify-center text-ink font-semibold text-[11.5px] flex-shrink-0 mt-auto">
       {letter}
     </div>
   )

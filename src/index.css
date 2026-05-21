@@ -26,6 +26,15 @@
   --sage: oklch(0.78 0.07 145);           /* soft sage green */
   --sage-soft: oklch(0.93 0.04 145);      /* sage tint background */
 
+  /* Source-lean palette — perspective spectrum used in PerspectiveChip + SourceRail.
+     Keep as their own tokens so they survive dark mode and aren't duplicated. */
+  --lean-left: #3B82F6;
+  --lean-center-left: #6E47FF;
+  --lean-center: #9BB89F;
+  --lean-center-right: #FFB152;
+  --lean-right: #FF5C2E;
+  --lean-independent: #9CA3AF;
+
   /* shadcn tokens — mapped to brand */
   --background: var(--paper);
   --foreground: var(--ink);
@@ -137,6 +146,12 @@
   --color-ember-soft: var(--ember-soft);
   --color-sage: var(--sage);
   --color-sage-soft: var(--sage-soft);
+  --color-lean-left: var(--lean-left);
+  --color-lean-center-left: var(--lean-center-left);
+  --color-lean-center: var(--lean-center);
+  --color-lean-center-right: var(--lean-center-right);
+  --color-lean-right: var(--lean-right);
+  --color-lean-independent: var(--lean-independent);
 
   --font-display: var(--font-display);
   --font-sans: var(--font-sans);

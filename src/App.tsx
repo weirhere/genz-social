@@ -153,11 +153,14 @@ function ScreenSwitcher({
   activeTab: Tab
   onTabChange: (t: Tab) => void
 }) {
+  // Mobile and desktop nav now share the same labels — no "01 · Today"
+  // numbering only-on-desktop. The presentation-conceit numbering belonged
+  // to the writeup, not the live UI.
   const items: { id: Tab; label: string }[] = [
-    { id: "today", label: "01 · Today" },
-    { id: "discover", label: "02 · Discover" },
-    { id: "loops", label: "03 · Loops" },
-    { id: "me", label: "04 · Me" },
+    { id: "today", label: "Today" },
+    { id: "discover", label: "Discover" },
+    { id: "loops", label: "Loops" },
+    { id: "me", label: "Me" },
   ]
   return (
     <div className="flex items-center gap-1 rounded-full bg-paper-2 ring-1 ring-paper-3/70 p-1">

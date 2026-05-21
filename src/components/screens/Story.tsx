@@ -58,7 +58,7 @@ function StoryTopBar({
           />
         </svg>
       </button>
-      <div className="flex-1 text-center text-[11px] font-medium tracking-[0.16em] uppercase text-ink-3 truncate px-2">
+      <div className="flex-1 text-center text-[11.5px] font-medium tracking-[0.16em] uppercase text-ink-3 truncate px-2">
         {story.category}
       </div>
       <div className="flex items-center gap-2">
@@ -170,7 +170,7 @@ function CategoryHeader({ story }: { story: Story }) {
     ink: "text-ink-2",
   }
   return (
-    <div className="flex items-center gap-2 text-[11px] font-medium tracking-[0.16em] uppercase">
+    <div className="flex items-center gap-2 text-[11.5px] font-medium tracking-[0.16em] uppercase">
       {story.isLive && (
         <span className="inline-flex items-center gap-1 text-ember">
           <span className="w-1.5 h-1.5 rounded-full bg-ember animate-pulse" />
@@ -184,44 +184,46 @@ function CategoryHeader({ story }: { story: Story }) {
   )
 }
 
+// Source-lean tokens — pulled from CSS so dark mode + single-source-of-truth work.
+const LEAN_LABEL: Record<string, string> = {
+  left: "Left",
+  "center-left": "C-L",
+  center: "Center",
+  "center-right": "C-R",
+  right: "Right",
+  independent: "Indep.",
+}
+const LEAN_COLOR_VAR: Record<string, string> = {
+  left: "var(--lean-left)",
+  "center-left": "var(--lean-center-left)",
+  center: "var(--lean-center)",
+  "center-right": "var(--lean-center-right)",
+  right: "var(--lean-right)",
+  independent: "var(--lean-independent)",
+}
+
 function SourceRail({ story }: { story: Story }) {
-  const leanLabel: Record<string, string> = {
-    left: "Left",
-    "center-left": "C-L",
-    center: "Center",
-    "center-right": "C-R",
-    right: "Right",
-    independent: "Indep.",
-  }
-  const leanColor: Record<string, string> = {
-    left: "#3B82F6",
-    "center-left": "#6E47FF",
-    center: "#9BB89F",
-    "center-right": "#FFB152",
-    right: "#FF5C2E",
-    independent: "#9CA3AF",
-  }
   return (
     <div className="mt-5 rounded-2xl bg-paper-2 ring-1 ring-paper-3/70 p-3.5">
       <div className="flex items-center justify-between mb-2.5">
-        <span className="text-[10.5px] font-medium tracking-[0.16em] uppercase text-ink-3">
+        <span className="text-[11px] font-medium tracking-[0.16em] uppercase text-ink-3">
           Sources · {story.sources.length}
         </span>
-        <span className="text-[10.5px] text-ink-3">{story.perspectiveSummary}</span>
+        <span className="text-[11.5px] text-ink-3">{story.perspectiveSummary}</span>
       </div>
       <div className="flex flex-wrap gap-1.5">
         {story.sources.map((s, i) => (
           <span
             key={i}
-            className="inline-flex items-center gap-1.5 rounded-full bg-paper px-2 py-1 ring-1 ring-paper-3/70 text-[11px] font-medium text-ink"
+            className="inline-flex items-center gap-1.5 rounded-full bg-paper px-2 py-1 ring-1 ring-paper-3/70 text-[12px] font-medium text-ink"
           >
             <span
               className="w-1.5 h-1.5 rounded-full"
-              style={{ background: leanColor[s.lean] }}
+              style={{ background: LEAN_COLOR_VAR[s.lean] }}
             />
             {s.name}
-            <span className="text-[10px] text-ink-3 ml-0.5">
-              {leanLabel[s.lean]}
+            <span className="text-[11px] text-ink-3 ml-0.5">
+              {LEAN_LABEL[s.lean]}
             </span>
           </span>
         ))}
@@ -255,10 +257,10 @@ function AskMarginDock({
           <SparkleGlyph />
         </div>
         <div className="text-left flex-1">
-          <div className="text-[14px] font-medium text-paper">
+          <div className="text-[14.5px] font-medium text-paper">
             Ask Margin about this
           </div>
-          <div className="text-[11px] text-paper/60 mt-0.5">
+          <div className="text-[12px] text-paper/65 mt-0.5">
             {story.margin.prompts.slice(0, 2).join(" · ")} · and more
           </div>
         </div>

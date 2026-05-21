@@ -1,10 +1,22 @@
 // Faux iOS-style status bar inside the phone frame.
-// Minimal 2026 vibe — time + tiny indicators.
+// Minimal 2026 vibe — uses the actual local time so the demo doesn't lie about
+// the smallest possible thing. (Previously hardcoded to "9:41" — cute, off-brand
+// for an editorial-credibility product.)
+
+function useNowHHMM() {
+  // We don't need re-rendering on the minute boundary for a static demo —
+  // a single read at mount is plenty.
+  const d = new Date()
+  const hh = d.getHours()
+  const mm = d.getMinutes().toString().padStart(2, "0")
+  return `${hh}:${mm}`
+}
 
 export function StatusBar() {
+  const now = useNowHHMM()
   return (
     <div className="flex items-center justify-between px-7 pt-3 pb-1 text-[13px] font-medium tabular text-ink">
-      <span>9:41</span>
+      <span>{now}</span>
       <div className="flex items-center gap-1.5">
         <SignalDots />
         <WifiGlyph />

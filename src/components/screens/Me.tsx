@@ -53,10 +53,12 @@ export function MeScreen() {
         />
       </Section>
 
-      <p className="px-5 mt-6 text-[11px] text-ink-3 leading-snug">
-        Loop is built by people. Editorial team of 8 in New York and Mexico City.{" "}
-        <span className="underline">About</span> · <span className="underline">Privacy</span>{" "}
-        · <span className="underline">How Margin works</span>
+      <BuiltByPeople />
+
+      <p className="px-5 mt-5 mb-2 text-[12px] text-ink-3 leading-snug">
+        <span className="underline underline-offset-2">About</span> ·{" "}
+        <span className="underline underline-offset-2">Privacy</span> ·{" "}
+        <span className="underline underline-offset-2">How Margin works</span>
       </p>
     </div>
   )
@@ -65,7 +67,8 @@ export function MeScreen() {
 function UserCard() {
   return (
     <div className="mx-5 mt-4 mb-6 rounded-3xl bg-ink p-5 relative overflow-hidden">
-      <div className="absolute -right-12 -top-12 w-40 h-40 rounded-full bg-signal/30 blur-3xl" />
+      {/* Warm cream glow instead of violet — violet stays reserved for Margin/AI. */}
+      <div className="absolute -right-12 -top-12 w-40 h-40 rounded-full bg-paper/12 blur-3xl" />
       <div className="relative flex items-center gap-3">
         <div className="w-14 h-14 rounded-full bg-paper text-ink flex items-center justify-center font-display text-[28px]">
           O
@@ -74,8 +77,9 @@ function UserCard() {
           <div className="font-display text-[24px] text-paper leading-none">
             Olivia
           </div>
-          <div className="text-[11.5px] text-paper/60 mt-1">
-            Member since March · 47 day streak (but who's counting)
+          {/* No streak. Loop is the anti-engagement-extraction product. */}
+          <div className="text-[12px] text-paper/65 mt-1">
+            Member since March · Loops finished this month: 12
           </div>
         </div>
       </div>
@@ -94,7 +98,47 @@ function Stat({ label, value }: { label: string; value: string }) {
       <div className="font-display text-[22px] text-paper leading-none tabular">
         {value}
       </div>
-      <div className="text-[10.5px] text-paper/60 mt-1">{label}</div>
+      <div className="text-[11.5px] text-paper/65 mt-1">{label}</div>
+    </div>
+  )
+}
+
+// The single most-loaded trust gesture in the brief: humans-in-the-loop.
+// Promoted from 11px footer text to its own card with editor initials.
+function BuiltByPeople() {
+  const editors = [
+    { initials: "RM", city: "NY" },
+    { initials: "AL", city: "NY" },
+    { initials: "JT", city: "CDMX" },
+    { initials: "SP", city: "NY" },
+  ]
+  return (
+    <div className="mt-7 mx-5 rounded-3xl bg-paper-2 ring-1 ring-paper-3/70 p-5">
+      <div className="text-[11px] font-medium tracking-[0.16em] uppercase text-ink-3 mb-2">
+        Built by people
+      </div>
+      <h3 className="font-display text-[22px] leading-tight text-ink text-balance">
+        Eight humans pick what makes the Loop.
+      </h3>
+      <p className="text-[13px] text-ink-2 leading-snug mt-2 text-pretty">
+        An editorial team of eight in New York and Mexico City decides the 7
+        stories every day. Margin reads alongside them — never instead of them.
+      </p>
+      <div className="mt-4 flex items-center gap-1.5">
+        {editors.map((e) => (
+          <div
+            key={e.initials}
+            className="w-9 h-9 rounded-full bg-paper ring-1 ring-paper-3 flex items-center justify-center text-[11.5px] font-semibold text-ink"
+            title={`${e.initials} · ${e.city}`}
+          >
+            {e.initials}
+          </div>
+        ))}
+        <span className="ml-1.5 text-[12px] text-ink-3 tabular">+4</span>
+      </div>
+      <button className="mt-4 text-[12.5px] font-medium text-ink underline underline-offset-4">
+        Meet the team →
+      </button>
     </div>
   )
 }
@@ -105,7 +149,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h2 className="font-display text-[22px] tracking-tight text-ink mb-2.5">
         {title}
       </h2>
-      <div className="rounded-2xl bg-paper-2 ring-1 ring-paper-3/70 divide-y divide-paper-3/60">
+      <div className="rounded-2xl bg-paper-2 ring-1 ring-paper-3/70 divide-y divide-paper-3/70">
         {children}
       </div>
     </div>
@@ -122,16 +166,16 @@ function CalibrationRow({
   options?: string[]
 }) {
   return (
-    <div className="px-4 py-3 flex items-center justify-between">
+    <div className="px-4 py-3.5 flex items-center justify-between">
       <div>
-        <div className="text-[13.5px] font-medium text-ink">{label}</div>
+        <div className="text-[14px] font-medium text-ink">{label}</div>
         {options && (
-          <div className="text-[10.5px] text-ink-3 mt-0.5">
+          <div className="text-[11.5px] text-ink-3 mt-0.5">
             {options.length} options
           </div>
         )}
       </div>
-      <div className="flex items-center gap-1.5 text-[13px] font-medium text-ink-2">
+      <div className="flex items-center gap-1.5 text-[13.5px] font-medium text-ink-2">
         {value}
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-ink-3">
           <path
@@ -157,10 +201,10 @@ function ReceiptRow({
   chart?: boolean
 }) {
   return (
-    <div className="px-4 py-3">
+    <div className="px-4 py-3.5">
       <div className="flex items-center justify-between">
-        <div className="text-[12.5px] text-ink-2">{label}</div>
-        <div className="text-[13px] font-semibold text-ink tabular">
+        <div className="text-[13px] text-ink-2">{label}</div>
+        <div className="text-[13.5px] font-semibold text-ink tabular">
           {chart ? "" : value}
         </div>
       </div>
@@ -177,7 +221,7 @@ function ReceiptRow({
               initial={{ width: 0 }}
               animate={{ width: "21%" }}
               transition={{ duration: 0.7, delay: 0.1 }}
-              className="bg-signal"
+              className="bg-ink/35"
             />
             <motion.div
               initial={{ width: 0 }}
@@ -186,7 +230,7 @@ function ReceiptRow({
               className="bg-ember"
             />
           </div>
-          <div className="mt-2 text-[11px] text-ink-3">{value}</div>
+          <div className="mt-2 text-[12px] text-ink-3">{value}</div>
         </>
       )}
     </div>
@@ -194,9 +238,10 @@ function ReceiptRow({
 }
 
 function HowMarginWorks() {
+  // Margin's own surface — violet earns its keep here.
   return (
     <div className="mt-6 mx-5 rounded-3xl bg-signal-soft p-5 relative overflow-hidden">
-      <div className="text-[10.5px] font-medium tracking-[0.16em] uppercase text-signal mb-2">
+      <div className="text-[11px] font-medium tracking-[0.16em] uppercase text-signal mb-2">
         How Margin works
       </div>
       <h3 className="font-display text-[22px] leading-tight text-ink text-balance">
@@ -208,7 +253,7 @@ function HowMarginWorks() {
         <Promise text="Margin is text-first. No AI anchors. No fake quotes." />
         <Promise text="Trained on the sources Loop has licensed. Scope published below." />
       </div>
-      <button className="mt-3 text-[12px] font-medium text-signal underline underline-offset-4">
+      <button className="mt-3 text-[13px] font-medium text-signal underline underline-offset-4">
         Read Margin's full receipts →
       </button>
     </div>
@@ -218,10 +263,10 @@ function HowMarginWorks() {
 function Promise({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-2">
-      <span className="mt-1 w-3 h-3 rounded-full bg-signal/30 flex-shrink-0 flex items-center justify-center">
+      <span className="mt-1.5 w-3 h-3 rounded-full bg-signal/30 flex-shrink-0 flex items-center justify-center">
         <span className="w-1 h-1 rounded-full bg-signal" />
       </span>
-      <span className="text-[12.5px] text-ink leading-snug text-pretty">{text}</span>
+      <span className="text-[13px] text-ink leading-snug text-pretty">{text}</span>
     </div>
   )
 }

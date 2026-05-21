@@ -1,6 +1,30 @@
 import { motion } from "motion/react"
-import { topics, voices, blindspots, type Topic } from "@/data/content"
+import {
+  topics,
+  voices,
+  blindspots,
+  type Topic,
+  type BlindspotFraming,
+} from "@/data/content"
 import { cn } from "@/lib/utils"
+
+// Lean labels for the Blindspot framing chips. Keep in sync with content.ts lean type.
+const LEAN_LABEL: Record<BlindspotFraming["lean"], string> = {
+  left: "Left-leaning critique",
+  "center-left": "Center-left critique",
+  center: "Centrist read",
+  "center-right": "Center-right critique",
+  right: "Right-leaning critique",
+  independent: "Independent read",
+}
+const LEAN_COLOR_VAR: Record<BlindspotFraming["lean"], string> = {
+  left: "var(--lean-left)",
+  "center-left": "var(--lean-center-left)",
+  center: "var(--lean-center)",
+  "center-right": "var(--lean-center-right)",
+  right: "var(--lean-right)",
+  independent: "var(--lean-independent)",
+}
 
 export function DiscoverScreen() {
   return (
@@ -23,7 +47,7 @@ function DiscoverHeader() {
       <h1 className="font-display text-[36px] leading-[1.04] tracking-tight text-ink text-balance">
         Look beyond your Loop.
       </h1>
-      <p className="text-[13.5px] text-ink-2 mt-2 max-w-[300px] text-pretty">
+      <p className="text-[14px] text-ink-2 mt-2 max-w-[300px] text-pretty">
         Topics you don't usually read. People your friends vouch for. What the
         algorithm's hiding.
       </p>
@@ -39,10 +63,10 @@ function TopicConstellation() {
       <ConstellationLines />
 
       <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-        <div className="text-[10.5px] font-medium tracking-[0.16em] uppercase text-paper/55">
+        <div className="text-[11px] font-medium tracking-[0.16em] uppercase text-paper/65">
           Topic map · this week
         </div>
-        <div className="flex items-center gap-1.5 text-[10px] text-paper/55">
+        <div className="flex items-center gap-1.5 text-[11px] text-paper/65">
           <span className="w-1.5 h-1.5 rounded-full bg-ember animate-pulse" />
           live now
         </div>
@@ -53,12 +77,12 @@ function TopicConstellation() {
       ))}
 
       <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
-        <div className="text-[10.5px] text-paper/55 leading-snug max-w-[200px]">
-          Size = volume this week.
+        <div className="text-[11px] text-paper/65 leading-snug max-w-[200px]">
+          Size = stories this week.
           <br />
-          Pulse = developing.
+          Pulse = developing right now.
         </div>
-        <button className="rounded-full bg-paper/10 backdrop-blur ring-1 ring-paper/15 px-3 py-1.5 text-[11px] font-medium text-paper">
+        <button className="rounded-full bg-paper/10 backdrop-blur ring-1 ring-paper/15 px-3 py-1.5 text-[12px] font-medium text-paper">
           Edit my map
         </button>
       </div>
@@ -185,8 +209,11 @@ function TopicNode({ topic, index }: { topic: Topic; index: number }) {
           s.font
         )}
       >
-        <span className="rounded-full bg-paper/15 px-1.5 py-px text-[9.5px] tabular text-paper/80 font-medium">
-          +{topic.newCount}
+        <span
+          className="rounded-full bg-paper/15 px-1.5 py-px text-[10.5px] tabular text-paper/85 font-medium"
+          title={`${topic.newCount} new stories this week`}
+        >
+          +{topic.newCount} new
         </span>
       </div>
     </motion.button>
@@ -200,7 +227,7 @@ function Voices() {
         <h2 className="font-display text-[24px] tracking-tight text-ink">
           Voices we trust
         </h2>
-        <button className="text-[11.5px] font-medium text-ink-3">See all</button>
+        <button className="text-[12px] font-medium text-ink-3">See all</button>
       </div>
       <div className="px-5 -mr-5 overflow-x-auto no-scrollbar">
         <div className="flex gap-3 pb-2 pr-5">
@@ -210,32 +237,35 @@ function Voices() {
               className="flex-shrink-0 w-[244px] rounded-2xl bg-paper-2 ring-1 ring-paper-3/70 p-3.5"
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-full bg-signal/15 ring-1 ring-signal/25 flex items-center justify-center text-signal font-display text-[18px]">
+                <div className="w-10 h-10 rounded-full bg-ink/8 ring-1 ring-ink/12 flex items-center justify-center text-ink font-display text-[18px]">
                   {v.name[0]}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[13.5px] font-semibold text-ink leading-tight truncate">
+                  <div className="text-[14px] font-semibold text-ink leading-tight truncate">
                     {v.name}
                   </div>
-                  <div className="text-[11px] text-ink-3 truncate">
+                  <div className="text-[12px] text-ink-3 truncate">
                     @{v.handle} · {v.followers}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-1.5 mt-2.5">
-                <span className="inline-flex items-center gap-1 rounded-full bg-signal-soft text-signal text-[10px] font-medium px-2 py-0.5">
-                  <CheckGlyph />
+                {/* Vetted = trust/credibility = sage, not signal violet. Signal is Margin/AI. */}
+                <span className="inline-flex items-center gap-1 rounded-full bg-sage-soft text-ink text-[11px] font-medium px-2 py-0.5">
+                  <span className="text-sage">
+                    <CheckGlyph />
+                  </span>
                   Vetted
                 </span>
-                <span className="text-[10.5px] text-ink-3">
+                <span className="text-[11.5px] text-ink-3">
                   {v.vouchedBy} friends follow
                 </span>
               </div>
-              <div className="mt-2.5 text-[12px] text-ink-2 leading-snug line-clamp-3 text-pretty">
+              <div className="mt-2.5 text-[12.5px] text-ink-2 leading-snug line-clamp-3 text-pretty">
                 "{v.latestTake}"
               </div>
-              <div className="text-[10.5px] text-ink-3 mt-1.5">{v.beat}</div>
-              <button className="mt-3 w-full rounded-full bg-ink text-paper text-[12px] font-medium py-1.5">
+              <div className="text-[11.5px] text-ink-3 mt-1.5">{v.beat}</div>
+              <button className="mt-3 w-full rounded-full bg-ink text-paper text-[13px] font-medium py-2">
                 Follow
               </button>
             </div>
@@ -267,40 +297,49 @@ function Blindspot() {
       <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-ember/20 blur-3xl" />
       <div className="relative">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-[10.5px] font-medium tracking-[0.16em] uppercase text-ember">
+          <span className="text-[11px] font-medium tracking-[0.16em] uppercase text-ember">
             Your blindspot
           </span>
-          <span className="text-[10.5px] text-ember/60">·</span>
-          <span className="text-[10.5px] text-ember/70">honest receipts</span>
+          <span className="text-[11px] text-ember/60">·</span>
+          <span className="text-[11px] text-ember/75">honest receipts</span>
         </div>
         <h3 className="font-display text-[22px] leading-tight text-ink text-balance">
           {bs.headline}
         </h3>
-        <p className="text-[13px] text-ink-2 mt-2">{bs.takeaway}</p>
+        <p className="text-[13.5px] text-ink-2 mt-2">{bs.takeaway}</p>
 
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <div className="rounded-xl bg-paper p-3 ring-1 ring-ember/20">
-            <div className="text-[10.5px] font-medium tracking-[0.14em] uppercase text-ink-3 mb-1.5">
-              On the left
-            </div>
-            <p className="text-[12.5px] text-ink leading-snug text-pretty">
-              {bs.leftFraming}
-            </p>
-          </div>
-          <div className="rounded-xl bg-paper p-3 ring-1 ring-ember/20">
-            <div className="text-[10.5px] font-medium tracking-[0.14em] uppercase text-ink-3 mb-1.5">
-              On the right
-            </div>
-            <p className="text-[12.5px] text-ink leading-snug text-pretty">
-              {bs.rightFraming}
-            </p>
-          </div>
+          {bs.framings.map((f) => (
+            <FramingCard key={f.name} framing={f} />
+          ))}
         </div>
 
-        <div className="mt-3 text-[10.5px] text-ink-3">
+        <div className="mt-3 text-[11.5px] text-ink-3">
           Generated by Margin. Sourced. Tap to compare.
         </div>
       </div>
+    </div>
+  )
+}
+
+function FramingCard({ framing }: { framing: BlindspotFraming }) {
+  return (
+    <div className="rounded-xl bg-paper p-3 ring-1 ring-ember/20">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <span
+          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+          style={{ background: LEAN_COLOR_VAR[framing.lean] }}
+        />
+        <span
+          className="text-[11px] font-medium tracking-[0.06em] text-ink"
+          title={LEAN_LABEL[framing.lean]}
+        >
+          {framing.name}
+        </span>
+      </div>
+      <p className="text-[12.5px] text-ink-2 leading-snug text-pretty">
+        {framing.text}
+      </p>
     </div>
   )
 }
@@ -316,7 +355,7 @@ function NearbyLoops() {
       <h2 className="font-display text-[24px] tracking-tight text-ink mb-1">
         Loops you might like
       </h2>
-      <p className="text-[12.5px] text-ink-3 mb-3">
+      <p className="text-[13px] text-ink-3 mb-3">
         Small group chats your friends are in. Request to join.
       </p>
       <div className="space-y-2">
@@ -325,14 +364,15 @@ function NearbyLoops() {
             key={l.name}
             className="flex items-center gap-3 p-3 rounded-2xl bg-paper-2 ring-1 ring-paper-3/70"
           >
-            <div className="w-10 h-10 rounded-2xl bg-signal-soft flex items-center justify-center text-signal text-[18px] font-display">
+            {/* Loop glyphs are brand objects, not Margin — keep them in the ink family. */}
+            <div className="w-10 h-10 rounded-2xl bg-ink/8 ring-1 ring-ink/10 flex items-center justify-center text-ink text-[18px] font-display">
               {l.glyph}
             </div>
             <div className="flex-1">
               <div className="text-[14px] font-semibold text-ink">{l.name}</div>
-              <div className="text-[11px] text-ink-3">{l.members} people · 2 friends</div>
+              <div className="text-[12px] text-ink-3">{l.members} people · 2 friends</div>
             </div>
-            <button className="rounded-full bg-ink text-paper text-[11.5px] font-medium px-3 py-1.5">
+            <button className="rounded-full bg-ink text-paper text-[12px] font-medium px-3 py-1.5">
               Ask to join
             </button>
           </div>

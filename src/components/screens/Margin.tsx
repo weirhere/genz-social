@@ -13,22 +13,28 @@ export function MarginPanel({
   onClose: () => void
 }) {
   const [phase, setPhase] = useState<Phase>("prompt")
-  const [activePromptIndex, setActivePromptIndex] = useState<number | null>(null)
-
-  const promptToShow =
-    activePromptIndex !== null
-      ? activePromptIndex
-      : story.margin.sampleAnswer.promptIndex
+  const [activeQuestion, setActiveQuestion] = useState<string>("")
+  const [inputValue, setInputValue] = useState<string>("")
 
   const askPrompt = (i: number) => {
-    setActivePromptIndex(i)
+    setActiveQuestion(story.margin.prompts[i])
+    setPhase("thinking")
+    setTimeout(() => setPhase("answer"), 850)
+  }
+
+  // The input fakes a real send: any non-empty question runs the same
+  // thinking → answer sequence the prompt list uses, so the demo feels alive.
+  const askCustom = (q: string) => {
+    if (!q.trim()) return
+    setActiveQuestion(q.trim())
+    setInputValue("")
     setPhase("thinking")
     setTimeout(() => setPhase("answer"), 850)
   }
 
   const reset = () => {
     setPhase("prompt")
-    setActivePromptIndex(null)
+    setActiveQuestion("")
   }
 
   return (
@@ -69,23 +75,25 @@ export function MarginPanel({
               />
             )}
             {phase === "thinking" && (
-              <Thinking
-                key="thinking"
-                prompt={story.margin.prompts[promptToShow]}
-              />
+              <Thinking key="thinking" prompt={activeQuestion} />
             )}
             {phase === "answer" && (
               <Answer
                 key="answer"
                 story={story}
-                promptText={story.margin.prompts[promptToShow]}
+                promptText={activeQuestion}
                 onReset={reset}
               />
             )}
           </AnimatePresence>
         </div>
 
-        <MarginInput phase={phase} />
+        <MarginInput
+          phase={phase}
+          value={inputValue}
+          onChange={setInputValue}
+          onSubmit={askCustom}
+        />
       </motion.div>
     </>
   )
@@ -114,11 +122,11 @@ function MarginHeader({ onClose }: { onClose: () => void }) {
             <span className="font-display text-[20px] tracking-tight text-ink leading-none">
               Margin
             </span>
-            <span className="text-[10px] font-medium tracking-[0.14em] uppercase text-signal bg-signal-soft px-1.5 py-0.5 rounded">
+            <span className="text-[10.5px] font-medium tracking-[0.14em] uppercase text-signal bg-signal-soft px-1.5 py-0.5 rounded">
               AI
             </span>
           </div>
-          <div className="text-[10.5px] text-ink-3 mt-0.5">
+          <div className="text-[11.5px] text-ink-3 mt-0.5">
             Your thinking partner. Always with sources.
           </div>
         </div>
@@ -158,6 +166,7 @@ function PromptList({
   story: Story
   onPick: (i: number) => void
 }) {
+  const suggestedIndex = story.margin.sampleAnswer.promptIndex
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -165,37 +174,46 @@ function PromptList({
       exit={{ opacity: 0, y: -6 }}
       transition={{ duration: 0.25 }}
     >
-      <p className="text-[13px] text-ink-2 mt-1 mb-4 text-pretty">
+      <p className="text-[13.5px] text-ink-2 mt-1 mb-4 text-pretty">
         I just read this story too. What do you want to figure out?
       </p>
       <div className="space-y-2.5">
-        {story.margin.prompts.map((p, i) => (
-          <motion.button
-            key={p}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => onPick(i)}
-            className={cn(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left",
-              "bg-paper-2 ring-1 ring-paper-3/70 hover:ring-signal/40 transition-colors",
-              i === story.margin.sampleAnswer.promptIndex &&
-                "bg-signal-soft ring-signal/30"
-            )}
-          >
-            <span
+        {story.margin.prompts.map((p, i) => {
+          const isSuggested = i === suggestedIndex
+          return (
+            <motion.button
+              key={p}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => onPick(i)}
               className={cn(
-                "w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-semibold tabular",
-                i === story.margin.sampleAnswer.promptIndex
-                  ? "bg-signal text-paper"
-                  : "bg-paper-3 text-ink-2"
+                "w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left",
+                "bg-paper-2 ring-1 ring-paper-3/70 hover:ring-signal/40 transition-colors",
+                isSuggested && "bg-signal-soft ring-signal/30"
               )}
             >
-              {i + 1}
-            </span>
-            <span className="text-[14px] text-ink font-medium">{p}</span>
-          </motion.button>
-        ))}
+              <span
+                className={cn(
+                  "w-7 h-7 rounded-full flex items-center justify-center text-[12.5px] font-semibold tabular",
+                  isSuggested ? "bg-signal text-paper" : "bg-paper-3 text-ink-2"
+                )}
+              >
+                {i + 1}
+              </span>
+              <span className="flex-1 text-[14.5px] text-ink font-medium">
+                {p}
+              </span>
+              {isSuggested && (
+                // Labeling the highlight so it reads as "Margin's pick for this
+                // story" rather than "the right answer." Preserves Socratic posture.
+                <span className="text-[11px] font-medium text-signal tracking-[0.06em]">
+                  Margin's pick
+                </span>
+              )}
+            </motion.button>
+          )
+        })}
       </div>
-      <p className="text-[11.5px] text-ink-3 mt-5 leading-snug">
+      <p className="text-[12px] text-ink-3 mt-5 leading-snug">
         Margin is tuned to this story specifically — prompts change per article.
         Receipts on every answer. Says "I don't know" out loud.
       </p>
@@ -231,7 +249,7 @@ function Thinking({ prompt }: { prompt: string }) {
             className="w-1.5 h-1.5 rounded-full bg-signal"
           />
         </div>
-        <span className="text-[11.5px]">reading 5 sources, comparing framing</span>
+        <span className="text-[12px]">reading 5 sources, comparing framing</span>
       </div>
     </motion.div>
   )
@@ -240,7 +258,7 @@ function Thinking({ prompt }: { prompt: string }) {
 function UserBubble({ text }: { text: string }) {
   return (
     <div className="flex justify-end">
-      <div className="max-w-[80%] rounded-2xl rounded-tr-md bg-ink text-paper px-3.5 py-2.5 text-[13.5px] leading-snug">
+      <div className="max-w-[80%] rounded-2xl rounded-tr-md bg-ink text-paper px-3.5 py-2.5 text-[14px] leading-snug">
         {text}
       </div>
     </div>
@@ -300,16 +318,19 @@ function Answer({
         </div>
       </div>
 
+      {/* The ask-back is the heart of the thinking-partner concept. Render it as
+          its own contained moment, not a footnote — and delay slightly so it
+          feels considered rather than batched. */}
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25, duration: 0.35 }}
-        className="mt-4 ml-9 pl-3 border-l-2 border-signal/35"
+        transition={{ delay: 0.6, duration: 0.4 }}
+        className="mt-5 ml-9 rounded-2xl bg-signal-soft/80 ring-1 ring-signal/25 px-3.5 py-3"
       >
-        <div className="text-[10.5px] font-medium tracking-[0.14em] uppercase text-signal mb-1">
+        <div className="text-[11px] font-medium tracking-[0.14em] uppercase text-signal mb-1.5">
           Margin asked back
         </div>
-        <p className="text-[13.5px] leading-snug text-ink text-pretty">
+        <p className="text-[14px] leading-snug text-ink text-pretty">
           {askBack}
         </p>
       </motion.div>
@@ -330,13 +351,13 @@ function Answer({
         </ActionPill>
         <button
           onClick={onReset}
-          className="ml-auto text-[11.5px] font-medium text-ink-3"
+          className="ml-auto text-[12px] font-medium text-ink-3"
         >
           New question
         </button>
       </motion.div>
 
-      <div className="mt-6 mb-2 text-[11px] text-ink-3 leading-snug border-t border-paper-3/70 pt-3">
+      <div className="mt-6 mb-2 text-[11.5px] text-ink-3 leading-snug border-t border-paper-3/70 pt-3">
         Margin trained on the {story.sources.length} sources linked. Quotes are
         verbatim. Where sources disagree, Margin says so.
       </div>
@@ -402,21 +423,49 @@ function SaveGlyph() {
   )
 }
 
-function MarginInput({ phase }: { phase: Phase }) {
+function MarginInput({
+  phase,
+  value,
+  onChange,
+  onSubmit,
+}: {
+  phase: Phase
+  value: string
+  onChange: (v: string) => void
+  onSubmit: (v: string) => void
+}) {
+  const disabled = phase === "thinking"
   return (
     <div className="px-4 pb-4 pt-3 border-t border-paper-3/60 bg-paper">
-      <div className="flex items-center gap-2 rounded-full bg-paper-2 ring-1 ring-paper-3 px-4 py-2.5">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          onSubmit(value)
+        }}
+        className={cn(
+          "flex items-center gap-2 rounded-full bg-paper-2 ring-1 ring-paper-3 px-4 py-2.5 transition-opacity",
+          disabled && "opacity-60"
+        )}
+      >
         <SparkleSmall />
         <input
           type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          disabled={disabled}
           placeholder={
             phase === "answer"
               ? "Follow up — Margin remembers"
               : "Ask anything about this story"
           }
-          className="flex-1 bg-transparent text-[13px] text-ink placeholder:text-ink-3 outline-none"
+          className="flex-1 bg-transparent text-[13.5px] text-ink placeholder:text-ink-3 outline-none disabled:cursor-not-allowed"
         />
-        <button className="w-7 h-7 rounded-full bg-ink flex items-center justify-center text-paper">
+        <button
+          type="submit"
+          disabled={disabled || !value.trim()}
+          className="w-7 h-7 rounded-full bg-ink flex items-center justify-center text-paper disabled:opacity-40"
+          aria-label="Send"
+        >
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path
               d="M5 8 V2 M2.5 4.5 L5 2 L7.5 4.5"
@@ -427,7 +476,7 @@ function MarginInput({ phase }: { phase: Phase }) {
             />
           </svg>
         </button>
-      </div>
+      </form>
     </div>
   )
 }
