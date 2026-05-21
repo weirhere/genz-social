@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { today, type Story } from "@/data/content"
-import { MarginPanel } from "./Margin"
+import { MarginPanel, SourceDetail } from "./Margin"
 import { cn } from "@/lib/utils"
 
 export function StoryScreen({
@@ -15,13 +15,18 @@ export function StoryScreen({
 }) {
   const story = today.find((s) => s.id === storyId) ?? today[0]
   const [marginOpen, setMarginOpen] = useState(false)
+  const [sourceIdx, setSourceIdx] = useState<number | null>(null)
 
   return (
     <div className="flex-1 flex flex-col relative overflow-hidden">
       <StoryTopBar story={story} onBack={onBack} />
 
       <div className="flex-1 overflow-y-auto pb-32">
-        <StoryBody story={story} onMarkRead={onMarkRead} />
+        <StoryBody
+          story={story}
+          onMarkRead={onMarkRead}
+          onSourceTap={setSourceIdx}
+        />
       </div>
 
       <AskMarginDock onOpen={() => setMarginOpen(true)} story={story} />
@@ -29,6 +34,19 @@ export function StoryScreen({
       <AnimatePresence>
         {marginOpen && (
           <MarginPanel story={story} onClose={() => setMarginOpen(false)} />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {sourceIdx !== null && (
+          <SourceDetail
+            key={`story-source-${sourceIdx}`}
+            source={story.sources[sourceIdx]}
+            // Story view doesn't carry a specific Margin quote, so show the
+            // standfirst — it's what the article promises this source supports.
+            quote={story.standfirst}
+            onClose={() => setSourceIdx(null)}
+          />
         )}
       </AnimatePresence>
     </div>
@@ -117,9 +135,11 @@ function ShareGlyph() {
 function StoryBody({
   story,
   onMarkRead,
+  onSourceTap,
 }: {
   story: Story
   onMarkRead: (id: string) => void
+  onSourceTap: (idx: number) => void
 }) {
   return (
     <article className="px-5 pt-1">
@@ -138,7 +158,7 @@ function StoryBody({
         {story.standfirst}
       </p>
 
-      <SourceRail story={story} />
+      <SourceRail story={story} onSourceTap={onSourceTap} />
 
       <div className="mt-6 space-y-4">
         {story.body.map((para, i) => (
@@ -202,7 +222,13 @@ const LEAN_COLOR_VAR: Record<string, string> = {
   independent: "var(--lean-independent)",
 }
 
-function SourceRail({ story }: { story: Story }) {
+function SourceRail({
+  story,
+  onSourceTap,
+}: {
+  story: Story
+  onSourceTap: (idx: number) => void
+}) {
   return (
     <div className="mt-5 rounded-2xl bg-paper-2 ring-1 ring-paper-3/70 p-3.5">
       <div className="flex items-center justify-between mb-2.5">
@@ -213,9 +239,12 @@ function SourceRail({ story }: { story: Story }) {
       </div>
       <div className="flex flex-wrap gap-1.5">
         {story.sources.map((s, i) => (
-          <span
+          <motion.button
             key={i}
-            className="inline-flex items-center gap-1.5 rounded-full bg-paper px-2 py-1 ring-1 ring-paper-3/70 text-[12px] font-medium text-ink"
+            type="button"
+            onClick={() => onSourceTap(i)}
+            whileTap={{ scale: 0.96 }}
+            className="inline-flex items-center gap-1.5 rounded-full bg-paper px-2 py-1 ring-1 ring-paper-3/70 text-[12px] font-medium text-ink hover:ring-signal/40 transition-colors"
           >
             <span
               className="w-1.5 h-1.5 rounded-full"
@@ -225,8 +254,11 @@ function SourceRail({ story }: { story: Story }) {
             <span className="text-[11px] text-ink-3 ml-0.5">
               {LEAN_LABEL[s.lean]}
             </span>
-          </span>
+          </motion.button>
         ))}
+      </div>
+      <div className="mt-2.5 text-[11px] text-ink-3">
+        Tap any source for the receipt.
       </div>
     </div>
   )

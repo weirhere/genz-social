@@ -31,6 +31,12 @@ export type Story = {
       promptIndex: number
       paragraphs: { text: string; cites: number[] }[]
       askBack: string
+      // What Margin replies when the user taps "Yes, do it" on the ask-back.
+      // Modeled as a second answer turn so the Socratic loop has somewhere to land.
+      followUp: {
+        userReply: string
+        paragraphs: { text: string; cites: number[] }[]
+      }
     }
   }
 }
@@ -92,6 +98,19 @@ export const today: Story[] = [
         ],
         askBack:
           "Want me to compare this to the EU AI Act fight, or pull up how each Senator has voted on tech regulation before?",
+        followUp: {
+          userReply: "Yes — the EU comparison.",
+          paragraphs: [
+            {
+              text: "The EU AI Act fight ran 2021-2023. Same two-sided fight: parameter-count vs. capabilities. The EU ended up with a hybrid — parameter threshold for the headline rule, plus a capabilities test for high-impact systems.",
+              cites: [4],
+            },
+            {
+              text: "Most of the Senate staff working this draft were in Brussels watching that fight. The current US text borrows language from Articles 3 and 51 of the EU Act, but stops short of the EU's tiering system.",
+              cites: [2, 4],
+            },
+          ],
+        },
       },
     },
   },
@@ -136,6 +155,19 @@ export const today: Story[] = [
           },
         ],
         askBack: "Want me to pull up a map of where the outages are right now?",
+        followUp: {
+          userReply: "Yes, show me the outage map.",
+          paragraphs: [
+            {
+              text: "Heaviest concentrations right now: the Oakland hills, parts of Berkeley north of campus, and the SF Sunset west of 19th. PG&E's outage tracker is the source — I can't render the map here, but I can describe the clusters.",
+              cites: [0, 1],
+            },
+            {
+              text: "Estimated restore times are 12-36 hours in those clusters. If you're west of 19th Ave or in the Berkeley hills, plan for the longer end.",
+              cites: [1],
+            },
+          ],
+        },
       },
     },
   },
@@ -179,6 +211,19 @@ export const today: Story[] = [
           },
         ],
         askBack: "Want me to pull the 2001 chart side-by-side with what's happening now?",
+        followUp: {
+          userReply: "Yes — 2001 vs. now.",
+          paragraphs: [
+            {
+              text: "2001: inflation 30%, falling; reserves $14B; poverty 38%, rising. The peso was pegged at 1:1 to the dollar. Then it broke. Within a month, the peso was at 3:1 and reserves were gone.",
+              cites: [0, 3],
+            },
+            {
+              text: "Now: inflation 36%, falling; reserves $32B and growing; poverty 38%, falling. No peg — Milei let the peso float from day one. That's the structural difference that matters.",
+              cites: [0, 1],
+            },
+          ],
+        },
       },
     },
   },
@@ -220,6 +265,19 @@ export const today: Story[] = [
           },
         ],
         askBack: "Want me to pull the actual Letterboxd reviews that broke this thing open?",
+        followUp: {
+          userReply: "Yes, pull the reviews.",
+          paragraphs: [
+            {
+              text: "The three reviews that did the most lift, per Vulture's reconstruction: a four-star from @reelpath calling it 'the first movie in a decade that respects its audience,' a five-star from @nightowl_films arguing it was 'secretly about grief,' and a contrarian one-star that became its own meme.",
+              cites: [0],
+            },
+            {
+              text: "What's striking: none of them were written by anyone with more than 5K followers. The 'reverse premiere' worked because the trust was peer-to-peer, not influencer-to-audience.",
+              cites: [1],
+            },
+          ],
+        },
       },
     },
   },
@@ -262,6 +320,19 @@ export const today: Story[] = [
           },
         ],
         askBack: "Want me to break down who's covered and who's likely to wait?",
+        followUp: {
+          userReply: "Yes, who's covered?",
+          paragraphs: [
+            {
+              text: "Covered immediately: roughly 60% of US sickle cell patients on Medicaid in states that signed onto CMS's outcomes-based pilot — 18 states so far. Private insurers are mostly waiting to see how the CMS deal lands before negotiating their own coverage.",
+              cites: [0],
+            },
+            {
+              text: "Likely to wait: patients in non-pilot states (mostly the Deep South, where sickle cell prevalence is actually highest). That's the equity story this approval is going to surface within six months.",
+              cites: [0, 1],
+            },
+          ],
+        },
       },
     },
   },
@@ -304,6 +375,19 @@ export const today: Story[] = [
           },
         ],
         askBack: "Do you rent or own? I can pull what this would mean for your situation specifically.",
+        followUp: {
+          userReply: "I rent. What would change?",
+          paragraphs: [
+            {
+              text: "If Measure J passes, your maximum annual rent increase drops to 5% no matter when your building was built. For pre-1979 buildings you're already covered by SF's rent ordinance — the cap there is currently CPI-based, usually under 3%.",
+              cites: [0, 2],
+            },
+            {
+              text: "The fights to watch: vacancy decontrol (whether landlords can reset rent between tenants) and capital-improvement passthroughs. Both are in the text and both will be litigated if it passes.",
+              cites: [1],
+            },
+          ],
+        },
       },
     },
   },
@@ -341,6 +425,19 @@ export const today: Story[] = [
           },
         ],
         askBack: "Want me to walk through what it means for the Knicks rotation specifically?",
+        followUp: {
+          userReply: "Yes, the Knicks rotation.",
+          paragraphs: [
+            {
+              text: "If this lands as reported, the Knicks lose a starting forward but pick up a scoring guard who can come off the bench behind Brunson. That gives Thibodeau a real 9-man rotation for the first time this season.",
+              cites: [0],
+            },
+            {
+              text: "The risk: starting forward depth thins out. They'd be one injury away from playing a wing they really wanted to develop in the regular rotation.",
+              cites: [0],
+            },
+          ],
+        },
       },
     },
   },
@@ -608,4 +705,7 @@ export const loopChat: Record<string, LoopMessage[]> = {
   ],
 }
 
-export const editorsBrief = "The Senate haggles over one word. California is underwater. Argentina, somehow, is winning."
+// Rewritten for orientation as well as voice. The original ("Senate haggles over
+// one word") read as editorial flex; a news-avoider couldn't decode it.
+// Proper nouns ("AI bill," "Bay Area," "Milei") do most of the work.
+export const editorsBrief = "Senate fights over the AI bill. Bay Area is underwater. Milei's peso bet, somehow, is winning."

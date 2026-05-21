@@ -117,7 +117,7 @@ function EditorsBrief({ brief }: { brief: string }) {
         <div className="flex items-center gap-2 mb-2">
           <span className="block w-1.5 h-1.5 rounded-full bg-ember animate-pulse" />
           <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-paper/65">
-            The day in 12 words
+            The day, briefly
           </span>
         </div>
         <p className="font-display text-[19px] leading-snug text-paper text-balance">
@@ -230,7 +230,7 @@ function StoryCard({
           sources={story.sources}
           summary={story.perspectiveSummary}
         />
-        <MarginButton />
+        <ReadMoreButton />
       </div>
     </motion.button>
   )
@@ -301,12 +301,13 @@ function PerspectiveChip({
   )
 }
 
-function MarginButton() {
-  // Margin is the one place the signal-violet wash earns its keep on this screen.
+function ReadMoreButton() {
+  // The CTA pill on each story card. Signal-violet wash is the one place this
+  // color earns its keep on the Today feed.
   return (
     <div className="inline-flex items-center gap-1 rounded-full bg-signal-soft px-2.5 py-1 text-[12px] font-medium text-signal">
       <SparkleGlyph />
-      Margin
+      Read more
     </div>
   )
 }

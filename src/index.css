@@ -61,7 +61,7 @@
   --chart-5: var(--ink-3);
 
   /* Fonts */
-  --font-display: "Instrument Serif", "Times New Roman", ui-serif, serif;
+  --font-display: "Bricolage Grotesque", "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -175,7 +175,7 @@
   .font-display {
     font-family: var(--font-display);
     font-feature-settings: "liga", "kern";
-    letter-spacing: -0.01em;
+    letter-spacing: -0.005em;
   }
 }
 
