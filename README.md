@@ -2,7 +2,7 @@
 
 **A Gen Z news app that closes the loop instead of opening another tab.**
 
-_LCA × Fortune 100 media brand assignment. May 2026._
+_Fortune 100 media brand assignment. May 2026._
 
 > Catch up. Not catch fire.
 

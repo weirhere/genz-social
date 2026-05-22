@@ -1,37 +1,8 @@
 import { Link } from "react-router-dom"
 import { motion } from "motion/react"
 import { ArrowUpRight, ArrowRight, Play, FileText, Palette } from "lucide-react"
-import { LoomHeroSlot } from "@/components/LoomPlayer"
-
-const LOOMS = [
-  {
-    label: "Part 1",
-    title: "Research to scaffolded concept",
-    duration: "~7 min",
-    blurb:
-      "Framing the brief, running user research, and standing up the React prototype.",
-    embed: "https://www.loom.com/embed/5bb659a1ce3e4f0ca3531227c816b9da",
-    href: "https://www.loom.com/share/5bb659a1ce3e4f0ca3531227c816b9da",
-  },
-  {
-    label: "Part 2",
-    title: "Review, critique, design system",
-    duration: "~10 min",
-    blurb:
-      "First reaction to the build, a design critique pass, and bootstrapping the Figma design system from the code.",
-    embed: "https://www.loom.com/embed/5993800c2a7148c0be252922e2e90273",
-    href: "https://www.loom.com/share/5993800c2a7148c0be252922e2e90273",
-  },
-  {
-    label: "Part 3",
-    title: "Simulated usability test, fixes, Figma handoff",
-    duration: "~12 min",
-    blurb:
-      "Running a persona-driven usability simulation, shipping the top P1 fixes live, and pulling all four core screens into Figma with Agentation feedback.",
-    embed: "https://www.loom.com/embed/ee0e2f4ba80b497eb2e748732a109a97",
-    href: "https://www.loom.com/share/ee0e2f4ba80b497eb2e748732a109a97",
-  },
-] as const
+import { LoomHeroSlot, LoomVideoSlot } from "@/components/LoomPlayer"
+import { SUB_LOOMS } from "@/data/looms"
 
 const BETS: { n: string; title: string; body: React.ReactNode }[] = [
   {
@@ -99,7 +70,7 @@ function Hero() {
     <section className="relative">
       <div className="max-w-5xl mx-auto px-6 sm:px-10 pt-16 sm:pt-24 pb-12 sm:pb-16">
         <div className="text-[11px] tracking-[0.22em] uppercase text-ink-3 mb-6 sm:mb-8">
-          LCA × Fortune 100 media brand · 2026 concept
+          Fortune 100 media brand · 2026 concept
         </div>
         <motion.h1
           initial={{ opacity: 0, y: 8 }}
@@ -152,7 +123,7 @@ function Hero() {
           <div className="flex items-center gap-3 text-[11px] tracking-[0.22em] uppercase text-ink-3">
             <span className="text-signal">The pitch</span>
             <span className="opacity-40">·</span>
-            <span>10 min</span>
+            <span>2 min</span>
           </div>
           <div className="hidden sm:block text-[12px] text-ink-3">
             Auto-collapses to picture-in-picture so you can keep watching while you click around.
@@ -198,17 +169,9 @@ function WatchSection() {
       </h2>
 
       <div className="mt-10 sm:mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-        {LOOMS.map((l) => (
-          <article key={l.embed} className="flex flex-col">
-            <div className="relative aspect-video rounded-xl overflow-hidden ring-1 ring-paper-3/70 bg-ink">
-              <iframe
-                src={l.embed}
-                title={l.title}
-                allow="fullscreen"
-                allowFullScreen
-                className="absolute inset-0 w-full h-full"
-              />
-            </div>
+        {SUB_LOOMS.map((l) => (
+          <article key={l.id} className="flex flex-col">
+            <LoomVideoSlot id={l.id} playLabel={`Play ${l.label.toLowerCase()}`} />
             <div className="mt-4 flex items-baseline gap-3">
               <span className="tabular text-[11px] tracking-[0.18em] text-signal uppercase">
                 {l.label}
@@ -220,7 +183,7 @@ function WatchSection() {
             </h3>
             <p className="mt-2 text-[14px] leading-[1.55] text-ink-2 text-pretty">{l.blurb}</p>
             <a
-              href={l.href}
+              href={l.shareUrl}
               target="_blank"
               rel="noreferrer"
               className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-medium text-ink-2 hover:text-signal transition-colors w-fit"
@@ -355,7 +318,7 @@ function Footer() {
         <div className="flex items-center gap-2">
           <span>Loop</span>
           <span className="opacity-40">·</span>
-          <span>LCA × Fortune 100 · 2026 concept</span>
+          <span>Fortune 100 · 2026 concept</span>
         </div>
         <a
           href="https://github.com/weirhere/genz-social"

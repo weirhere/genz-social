@@ -1,4 +1,4 @@
-# LCA Assignment: Research Brief
+# Assignment: Research Brief
 
 **Project:** Gen Z news/social app for a Fortune 100 media brand
 **Stage:** Research synthesis (pre-concept)

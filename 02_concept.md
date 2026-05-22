@@ -2,7 +2,7 @@
 
 **A Gen Z news app that closes the loop instead of opening another tab.**
 
-*LCA × Fortune 100 media brand. May 2026.*
+*Fortune 100 media brand. May 2026.*
 
 ---
 
@@ -211,7 +211,7 @@ The visual identity has to do three jobs at once: feel youthful and 2026, feel c
 
 ## Success measures (what we'd ship and watch)
 
-The brief asked how the design maps to LCA's standard. Here's how we'd measure whether Loop is working:
+The brief asked how the design maps to the brand's standard. Here's how we'd measure whether Loop is working:
 
 **Retention without engagement extraction:**
 - D30 retention > 35% (vs. Artifact's struggle here)

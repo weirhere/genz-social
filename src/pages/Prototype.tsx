@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { AnimatePresence, motion } from "motion/react"
 import { PhoneShell } from "@/components/shell/PhoneShell"
@@ -9,6 +9,23 @@ import { StoryScreen } from "@/components/screens/Story"
 import { DiscoverScreen } from "@/components/screens/Discover"
 import { LoopsScreen } from "@/components/screens/Loops"
 import { MeScreen } from "@/components/screens/Me"
+import { LoomSidecar } from "@/components/LoomPlayer"
+import { ALL_LOOMS } from "@/data/looms"
+
+// lg breakpoint matches Tailwind's 1024px — below it the phone owns the
+// whole canvas and the sidecar would be cramped, so we fall through to the
+// existing draggable PiP behavior.
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(false)
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 1024px)")
+    setIsDesktop(mql.matches)
+    const onChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches)
+    mql.addEventListener("change", onChange)
+    return () => mql.removeEventListener("change", onChange)
+  }, [])
+  return isDesktop
+}
 
 type View =
   | { kind: "tab"; tab: Tab }
@@ -17,6 +34,7 @@ type View =
 export function Prototype() {
   const [view, setView] = useState<View>({ kind: "tab", tab: "today" })
   const [readIds, setReadIds] = useState<Set<string>>(() => new Set())
+  const isDesktop = useIsDesktop()
 
   const activeTab = view.kind === "tab" ? view.tab : view.from
 
@@ -40,12 +58,15 @@ export function Prototype() {
   return (
     <div className="min-h-svh w-full bg-paper sm:bg-[radial-gradient(ellipse_at_top_left,oklch(0.95_0.018_80)_0%,oklch(0.92_0.022_80)_50%,oklch(0.94_0.025_80)_100%)] relative overflow-x-hidden">
       <DesktopChrome activeTab={activeTab} onTabChange={switchTab} />
+      <MobileTopBar />
 
       <div className="relative w-full flex justify-center sm:py-8 sm:pt-24">
-        <PhoneShell>
-          <StatusBar />
+        <div className="flex items-start gap-8 lg:gap-12 w-full lg:w-auto justify-center">
+          {isDesktop && <LoomSidecar entries={ALL_LOOMS} />}
+          <PhoneShell>
+            <StatusBar />
 
-          <div className="flex-1 relative overflow-hidden">
+            <div className="flex-1 relative overflow-hidden">
             <AnimatePresence mode="wait">
               {view.kind === "tab" && view.tab === "today" && (
                 <ScreenFrame key="today">
@@ -88,10 +109,11 @@ export function Prototype() {
             </AnimatePresence>
           </div>
 
-          {view.kind !== "story" && (
-            <BottomNav active={activeTab} onChange={switchTab} />
-          )}
-        </PhoneShell>
+            {view.kind !== "story" && (
+              <BottomNav active={activeTab} onChange={switchTab} />
+            )}
+          </PhoneShell>
+        </div>
       </div>
 
       <DesktopFooter />
@@ -117,6 +139,27 @@ function ScreenFrame({
   )
 }
 
+function MobileTopBar() {
+  return (
+    <div className="sm:hidden sticky top-0 inset-x-0 z-30 h-11 bg-paper/95 backdrop-blur-sm border-b border-paper-3/60 flex items-center justify-between px-3">
+      <Link
+        to="/"
+        className="inline-flex items-center gap-1.5 text-[12px] text-ink-2 hover:text-ink active:text-ink transition-colors px-2.5 py-1.5 rounded-full ring-1 ring-paper-3/70 bg-paper-2"
+      >
+        <span aria-hidden>←</span> Project home
+      </Link>
+      <div className="flex items-center gap-1.5">
+        <svg width="14" height="14" viewBox="0 0 22 22" fill="none">
+          <circle cx="11" cy="11" r="9" stroke="var(--ink)" strokeWidth="2.4" />
+        </svg>
+        <span className="font-display text-[14px] tracking-tight text-ink leading-none">
+          Loop
+        </span>
+      </div>
+    </div>
+  )
+}
+
 function DesktopChrome({
   activeTab,
   onTabChange,
@@ -136,7 +179,7 @@ function DesktopChrome({
               Loop
             </div>
             <div className="text-[10px] tracking-[0.2em] uppercase text-ink-3 mt-0.5">
-              LCA × Fortune 100 · 2026 concept
+              Fortune 100 · 2026 concept
             </div>
           </div>
         </Link>
