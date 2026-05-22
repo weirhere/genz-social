@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom"
 import { Agentation } from "agentation"
+import { Analytics } from "@vercel/analytics/react"
 import { Landing } from "@/pages/Landing"
 import { Prototype } from "@/pages/Prototype"
 import { LoomPlayerProvider } from "@/components/LoomPlayer"
@@ -17,6 +18,7 @@ function App() {
           <Route path="*" element={<Landing />} />
         </Routes>
         {import.meta.env.DEV && <Agentation />}
+        <Analytics />
       </LoomPlayerProvider>
     </BrowserRouter>
   )
