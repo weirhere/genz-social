@@ -3,15 +3,23 @@ import { Agentation } from "agentation"
 import { Analytics } from "@vercel/analytics/react"
 import { Landing } from "@/pages/Landing"
 import { Prototype } from "@/pages/Prototype"
-import { LoomPlayerProvider } from "@/components/LoomPlayer"
+import { LoomPlayerProvider, type LoomVideoConfig } from "@/components/LoomPlayer"
+import { LOOM_VIDEOS } from "@/data/looms"
 
-const WALKTHROUGH_EMBED =
-  "https://www.loom.com/embed/51fbce856eeb42788dba813d71b9d517"
+const VIDEOS: LoomVideoConfig[] = LOOM_VIDEOS.map(
+  ({ id, embedUrl, title, thumbnailUrl, displayMode }) => ({
+    id,
+    embedUrl,
+    title,
+    thumbnailUrl,
+    displayMode,
+  })
+)
 
 function App() {
   return (
     <BrowserRouter>
-      <LoomPlayerProvider embedUrl={WALKTHROUGH_EMBED}>
+      <LoomPlayerProvider videos={VIDEOS} defaultActiveId="hero">
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/prototype" element={<Prototype />} />
