@@ -6,6 +6,12 @@ import { EASE_CONTENT, STAGGER } from "@/lib/motion"
 import { Sheet } from "@/components/ui/Sheet"
 import { useAppState, type Settings } from "@/state/AppState"
 
+function formatToday(date: Date = new Date()) {
+  const weekday = date.toLocaleDateString("en-US", { weekday: "long" })
+  const month = date.toLocaleDateString("en-US", { month: "long" })
+  return `${weekday} · ${month} ${date.getDate()}`
+}
+
 export function TodayScreen({
   readIds,
   onOpenStory,
@@ -77,7 +83,7 @@ function Header({ onOpenSettings }: { onOpenSettings: () => void }) {
         <div className="flex items-center gap-2">
           <LoopMark />
           <span className="text-[11px] font-medium tracking-[0.18em] uppercase text-ink-3">
-            Thursday · May 21
+            {formatToday()}
           </span>
         </div>
         <motion.button
