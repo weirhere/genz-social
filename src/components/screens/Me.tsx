@@ -1,6 +1,9 @@
 import { useState } from "react"
-import { motion } from "motion/react"
+import { AnimatePresence, motion } from "motion/react"
 import { cn } from "@/lib/utils"
+import { useAppState, type Settings } from "@/state/AppState"
+import { Sheet } from "@/components/ui/Sheet"
+import type { Tab } from "@/components/shell/BottomNav"
 
 // Anchored on the JTBD: Aisha (and any persona) needs Loop to know what she
 // cares about. Pre-populated with the personas' implied interests so the
@@ -17,43 +20,26 @@ const INTEREST_OPTIONS = [
   { id: "media-criticism", label: "Media criticism" },
   { id: "housing", label: "Housing" },
 ]
-const DEFAULT_INTERESTS = ["ai", "your-city", "climate"]
-const DEFAULT_MUTES = ["sports"]
 
-export function MeScreen() {
-  const [interests, setInterests] = useState<Set<string>>(
-    () => new Set(DEFAULT_INTERESTS)
-  )
-  const [mutes, setMutes] = useState<Set<string>>(() => new Set(DEFAULT_MUTES))
+const SETTING_OPTIONS: Record<keyof Settings, string[]> = {
+  storyCount: ["5", "7", "10", "12"],
+  dropTime: ["5:30 AM", "6:00 AM", "7:00 AM", "8:00 AM"],
+  tone: ["Conversational", "Newsroom", "Lean & dry"],
+}
 
-  const toggleInterest = (id: string) => {
-    setInterests((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      // Adding to interests removes from mutes — mutually exclusive.
-      setMutes((m) => {
-        const nm = new Set(m)
-        nm.delete(id)
-        return nm
-      })
-      return next
-    })
-  }
+const SETTING_LABEL: Record<keyof Settings, string> = {
+  storyCount: "Story count per day",
+  dropTime: "Drop time",
+  tone: "Tone",
+}
 
-  const toggleMute = (id: string) => {
-    setMutes((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      setInterests((i) => {
-        const ni = new Set(i)
-        ni.delete(id)
-        return ni
-      })
-      return next
-    })
-  }
+type InfoSheetKey = "team" | "margin" | "about" | "privacy"
+
+export function MeScreen({ onSwitchTab: _onSwitchTab }: { onSwitchTab?: (t: Tab) => void } = {}) {
+  const { interests, topicMutes, toggleInterest, toggleTopicMute } =
+    useAppState()
+  const [pickerKey, setPickerKey] = useState<keyof Settings | null>(null)
+  const [infoSheet, setInfoSheet] = useState<InfoSheetKey | null>(null)
 
   return (
     <div className="flex-1 overflow-y-auto pb-28">
@@ -70,58 +56,272 @@ export function MeScreen() {
 
       <InterestsCard
         interests={interests}
-        mutes={mutes}
+        mutes={topicMutes}
         onToggleInterest={toggleInterest}
-        onToggleMute={toggleMute}
+        onToggleMute={toggleTopicMute}
       />
 
       <Section title="Calibrate my Loop">
-        <CalibrationRow
-          label="Story count per day"
-          value="7"
-          options={["5", "7", "10", "12"]}
-        />
-        <CalibrationRow
-          label="Drop time"
-          value="6:00 AM"
-        />
-        <CalibrationRow
-          label="Tone"
-          value="Conversational"
-          options={["Conversational", "Newsroom", "Lean & dry"]}
-        />
+        <CalibrationKey settingKey="storyCount" onOpen={setPickerKey} />
+        <CalibrationKey settingKey="dropTime" onOpen={setPickerKey} />
+        <CalibrationKey settingKey="tone" onOpen={setPickerKey} />
       </Section>
 
-      <HowMarginWorks />
+      <HowMarginWorks onLearnMore={() => setInfoSheet("margin")} />
 
       <Section title="Receipts on you">
-        <ReceiptRow
-          label="Stories read this month"
-          value="142"
-        />
+        <ReceiptRow label="Stories read this month" value="142" />
         <ReceiptRow
           label="Source lean balance"
           value="62% center · 21% left · 17% right"
           chart
         />
-        <ReceiptRow
-          label="Most-read topic"
-          value="AI & policy"
-        />
-        <ReceiptRow
-          label="Margin questions asked"
-          value="38"
-        />
+        <ReceiptRow label="Most-read topic" value="AI & policy" />
+        <ReceiptRow label="Margin questions asked" value="38" />
       </Section>
 
-      <BuiltByPeople />
+      <BuiltByPeople onMeetTeam={() => setInfoSheet("team")} />
 
       <p className="px-5 mt-5 mb-2 text-[12px] text-ink-3 leading-snug">
-        <span className="underline underline-offset-2">About</span> ·{" "}
-        <span className="underline underline-offset-2">Privacy</span> ·{" "}
-        <span className="underline underline-offset-2">How Margin works</span>
+        <button
+          onClick={() => setInfoSheet("about")}
+          className="underline underline-offset-2 hover:text-ink-2 transition-colors"
+        >
+          About
+        </button>{" "}
+        ·{" "}
+        <button
+          onClick={() => setInfoSheet("privacy")}
+          className="underline underline-offset-2 hover:text-ink-2 transition-colors"
+        >
+          Privacy
+        </button>{" "}
+        ·{" "}
+        <button
+          onClick={() => setInfoSheet("margin")}
+          className="underline underline-offset-2 hover:text-ink-2 transition-colors"
+        >
+          How Margin works
+        </button>
       </p>
+
+      <AnimatePresence>
+        {pickerKey && (
+          <SettingPicker
+            settingKey={pickerKey}
+            onClose={() => setPickerKey(null)}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {infoSheet && (
+          <InfoSheet
+            which={infoSheet}
+            onClose={() => setInfoSheet(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
+  )
+}
+
+function CalibrationKey({
+  settingKey,
+  onOpen,
+}: {
+  settingKey: keyof Settings
+  onOpen: (k: keyof Settings) => void
+}) {
+  const { settings } = useAppState()
+  return (
+    <button
+      onClick={() => onOpen(settingKey)}
+      className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-paper-3/40 transition-colors"
+    >
+      <div>
+        <div className="text-[14px] font-medium text-ink">
+          {SETTING_LABEL[settingKey]}
+        </div>
+        <div className="text-[11.5px] text-ink-3 mt-0.5">
+          {SETTING_OPTIONS[settingKey].length} options
+        </div>
+      </div>
+      <div className="flex items-center gap-1.5 text-[13.5px] font-medium text-ink-2">
+        {settings[settingKey]}
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 12 12"
+          fill="none"
+          className="text-ink-3"
+        >
+          <path
+            d="M4.5 3 L7.5 6 L4.5 9"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+    </button>
+  )
+}
+
+function SettingPicker({
+  settingKey,
+  onClose,
+}: {
+  settingKey: keyof Settings
+  onClose: () => void
+}) {
+  const { settings, updateSetting, toast } = useAppState()
+  return (
+    <Sheet
+      title={SETTING_LABEL[settingKey]}
+      subtitle="Pick one. You can change this anytime."
+      onClose={onClose}
+    >
+      <div className="px-3 pb-4 pt-1">
+        <div className="rounded-2xl bg-paper-2 ring-1 ring-paper-3/70 divide-y divide-paper-3/70 overflow-hidden">
+          {SETTING_OPTIONS[settingKey].map((opt) => {
+            const selected = settings[settingKey] === opt
+            return (
+              <motion.button
+                key={opt}
+                whileTap={{ scale: 0.985 }}
+                onClick={() => {
+                  updateSetting(settingKey, opt)
+                  toast(`${SETTING_LABEL[settingKey]} → ${opt}`)
+                  onClose()
+                }}
+                className="w-full flex items-center justify-between px-4 py-3.5 text-left hover:bg-paper-3/40"
+              >
+                <span className="text-[14.5px] text-ink">{opt}</span>
+                {selected && (
+                  <span className="w-5 h-5 rounded-full bg-sage flex items-center justify-center">
+                    <svg width="11" height="11" viewBox="0 0 11 11">
+                      <path
+                        d="M2 5.5 L4.5 8 L9 3"
+                        stroke="white"
+                        strokeWidth="1.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        fill="none"
+                      />
+                    </svg>
+                  </span>
+                )}
+              </motion.button>
+            )
+          })}
+        </div>
+      </div>
+    </Sheet>
+  )
+}
+
+const EDITORS = [
+  { initials: "RM", name: "Rina Marquez", city: "NY", beat: "AI & policy" },
+  { initials: "AL", name: "Alex Liu", city: "NY", beat: "Markets" },
+  { initials: "JT", name: "Julia Torres", city: "CDMX", beat: "Climate" },
+  { initials: "SP", name: "Sam Patel", city: "NY", beat: "Culture" },
+  { initials: "DK", name: "Devon Kim", city: "NY", beat: "Tech" },
+  { initials: "NW", name: "Naomi Webb", city: "CDMX", beat: "Local" },
+  { initials: "EO", name: "Ezra Okafor", city: "NY", beat: "Science" },
+  { initials: "MV", name: "Maya Vargas", city: "CDMX", beat: "Sports & life" },
+]
+
+const INFO_COPY: Record<
+  InfoSheetKey,
+  { title: string; subtitle: string; body: string[] }
+> = {
+  team: {
+    title: "Meet the team",
+    subtitle: "Eight humans pick what makes the Loop.",
+    body: [],
+  },
+  margin: {
+    title: "How Margin works",
+    subtitle: "Built to think with you, not for you.",
+    body: [
+      "Margin is Loop's reading-in-the-margins assistant. It reads alongside the editorial team — never instead of them — and shows its work.",
+      "Every claim has a citation chip. Tap one and you'll see the source, the lean, and the relevant passage.",
+      "Margin is text-first. No fake quotes, no AI anchors, no synthetic voices. If the sources disagree, Margin says so.",
+      "It's trained on the sources Loop has licensed. The full scope is published — you can check it any time.",
+    ],
+  },
+  about: {
+    title: "About Loop",
+    subtitle: "A small, honest morning Loop.",
+    body: [
+      "Loop is a daily news product designed for people who want fewer stories, more context, and zero engagement-bait.",
+      "Seven stories. One editor's brief. Built by eight humans in New York and Mexico City.",
+      "We don't sell ads. We don't measure dwell time. We end the Loop when it's done.",
+    ],
+  },
+  privacy: {
+    title: "Privacy",
+    subtitle: "What we collect and what we don't.",
+    body: [
+      "We store what's necessary to deliver your Loop: your interests, your reading state, your Loop memberships.",
+      "We do not sell your data. We do not track you off-platform. We do not build behavioral profiles for ad targeting.",
+      "Margin questions are processed on our infrastructure. They are not used to train external models.",
+    ],
+  },
+}
+
+function InfoSheet({
+  which,
+  onClose,
+}: {
+  which: InfoSheetKey
+  onClose: () => void
+}) {
+  const copy = INFO_COPY[which]
+  return (
+    <Sheet
+      title={copy.title}
+      subtitle={copy.subtitle}
+      onClose={onClose}
+      maxHeightPct={80}
+    >
+      <div className="px-5 pb-6 pt-1">
+        {which === "team" ? (
+          <div className="space-y-2">
+            {EDITORS.map((e) => (
+              <div
+                key={e.initials}
+                className="flex items-center gap-3 p-3 rounded-2xl bg-paper-2 ring-1 ring-paper-3/70"
+              >
+                <div className="w-10 h-10 rounded-full bg-paper ring-1 ring-paper-3 flex items-center justify-center text-[12.5px] font-semibold text-ink">
+                  {e.initials}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[14px] font-semibold text-ink">
+                    {e.name}
+                  </div>
+                  <div className="text-[12px] text-ink-3">
+                    {e.beat} · {e.city}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {copy.body.map((p, i) => (
+              <p
+                key={i}
+                className="text-[14px] leading-snug text-ink-2 text-pretty"
+              >
+                {p}
+              </p>
+            ))}
+          </div>
+        )}
+      </div>
+    </Sheet>
   )
 }
 
@@ -263,9 +463,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   )
 }
 
-// The single most-loaded trust gesture in the brief: humans-in-the-loop.
-// Promoted from 11px footer text to its own card with editor initials.
-function BuiltByPeople() {
+function BuiltByPeople({ onMeetTeam }: { onMeetTeam: () => void }) {
   const editors = [
     { initials: "RM", city: "NY" },
     { initials: "AL", city: "NY" },
@@ -296,7 +494,10 @@ function BuiltByPeople() {
         ))}
         <span className="ml-1.5 text-[12px] text-ink-3 tabular">+4</span>
       </div>
-      <button className="mt-4 text-[12.5px] font-medium text-ink underline underline-offset-4">
+      <button
+        onClick={onMeetTeam}
+        className="mt-4 text-[12.5px] font-medium text-ink underline underline-offset-4 hover:text-signal transition-colors"
+      >
         Meet the team →
       </button>
     </div>
@@ -316,40 +517,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function CalibrationRow({
-  label,
-  value,
-  options,
-}: {
-  label: string
-  value: string
-  options?: string[]
-}) {
-  return (
-    <div className="px-4 py-3.5 flex items-center justify-between">
-      <div>
-        <div className="text-[14px] font-medium text-ink">{label}</div>
-        {options && (
-          <div className="text-[11.5px] text-ink-3 mt-0.5">
-            {options.length} options
-          </div>
-        )}
-      </div>
-      <div className="flex items-center gap-1.5 text-[13.5px] font-medium text-ink-2">
-        {value}
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="text-ink-3">
-          <path
-            d="M4.5 3 L7.5 6 L4.5 9"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </div>
-    </div>
-  )
-}
 
 function ReceiptRow({
   label,
@@ -397,8 +564,7 @@ function ReceiptRow({
   )
 }
 
-function HowMarginWorks() {
-  // Margin's own surface — violet earns its keep here.
+function HowMarginWorks({ onLearnMore }: { onLearnMore: () => void }) {
   return (
     <div className="mt-6 mx-5 rounded-3xl bg-signal-soft p-5 relative overflow-hidden">
       <div className="text-[11px] font-medium tracking-[0.16em] uppercase text-signal mb-2">
@@ -413,7 +579,10 @@ function HowMarginWorks() {
         <Promise text="Margin is text-first. No AI anchors. No fake quotes." />
         <Promise text="Trained on the sources Loop has licensed. Scope published below." />
       </div>
-      <button className="mt-3 text-[13px] font-medium text-signal underline underline-offset-4">
+      <button
+        onClick={onLearnMore}
+        className="mt-3 text-[13px] font-medium text-signal underline underline-offset-4 hover:text-ink transition-colors"
+      >
         Read Margin's full receipts →
       </button>
     </div>

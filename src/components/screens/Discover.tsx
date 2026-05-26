@@ -1,12 +1,18 @@
-import { motion } from "motion/react"
+import { useState } from "react"
+import { AnimatePresence, motion } from "motion/react"
 import {
   topics,
   voices,
   blindspots,
+  today,
   type Topic,
+  type Voice,
   type BlindspotFraming,
 } from "@/data/content"
 import { cn } from "@/lib/utils"
+import { useAppState } from "@/state/AppState"
+import { Sheet } from "@/components/ui/Sheet"
+import type { Tab } from "@/components/shell/BottomNav"
 
 // Lean labels for the Blindspot framing chips. Keep in sync with content.ts lean type.
 const LEAN_LABEL: Record<BlindspotFraming["lean"], string> = {
@@ -26,14 +32,55 @@ const LEAN_COLOR_VAR: Record<BlindspotFraming["lean"], string> = {
   independent: "var(--lean-independent)",
 }
 
-export function DiscoverScreen() {
+export function DiscoverScreen({
+  onOpenStory,
+  onSwitchTab,
+}: {
+  onOpenStory: (id: string) => void
+  onSwitchTab: (tab: Tab) => void
+}) {
+  const [allVoicesOpen, setAllVoicesOpen] = useState(false)
+  const [editMapOpen, setEditMapOpen] = useState(false)
+  const [topicSheet, setTopicSheet] = useState<Topic | null>(null)
   return (
     <div className="flex-1 overflow-y-auto pb-28">
       <DiscoverHeader />
-      <TopicConstellation />
-      <Voices />
+      <TopicConstellation
+        onEditMap={() => setEditMapOpen(true)}
+        onTopicTap={(t) => setTopicSheet(t)}
+      />
+      <Voices onSeeAll={() => setAllVoicesOpen(true)} />
       <Blindspot />
       <NearbyLoops />
+
+      <AnimatePresence>
+        {allVoicesOpen && (
+          <AllVoicesSheet onClose={() => setAllVoicesOpen(false)} />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {editMapOpen && (
+          <EditMapSheet
+            onClose={() => setEditMapOpen(false)}
+            onOpenMe={() => {
+              setEditMapOpen(false)
+              onSwitchTab("me")
+            }}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {topicSheet && (
+          <TopicStoriesSheet
+            topic={topicSheet}
+            onClose={() => setTopicSheet(null)}
+            onOpenStory={(id) => {
+              setTopicSheet(null)
+              onOpenStory(id)
+            }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -55,7 +102,13 @@ function DiscoverHeader() {
   )
 }
 
-function TopicConstellation() {
+function TopicConstellation({
+  onEditMap,
+  onTopicTap,
+}: {
+  onEditMap: () => void
+  onTopicTap: (t: Topic) => void
+}) {
   return (
     <div className="mx-5 mt-5 relative h-[360px] rounded-3xl bg-ink overflow-hidden">
       {/* Subtle gradient + grid */}
@@ -73,7 +126,7 @@ function TopicConstellation() {
       </div>
 
       {topics.map((t, i) => (
-        <TopicNode key={t.id} topic={t} index={i} />
+        <TopicNode key={t.id} topic={t} index={i} onTap={() => onTopicTap(t)} />
       ))}
 
       <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
@@ -82,9 +135,13 @@ function TopicConstellation() {
           <br />
           Pulse = developing right now.
         </div>
-        <button className="rounded-full bg-paper/10 backdrop-blur ring-1 ring-paper/15 px-3 py-1.5 text-[12px] font-medium text-paper">
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={onEditMap}
+          className="rounded-full bg-paper/10 backdrop-blur ring-1 ring-paper/15 px-3 py-1.5 text-[12px] font-medium text-paper hover:bg-paper/15 transition-colors"
+        >
           Edit my map
-        </button>
+        </motion.button>
       </div>
     </div>
   )
@@ -129,7 +186,15 @@ function ConstellationLines() {
   )
 }
 
-function TopicNode({ topic, index }: { topic: Topic; index: number }) {
+function TopicNode({
+  topic,
+  index,
+  onTap,
+}: {
+  topic: Topic
+  index: number
+  onTap: () => void
+}) {
   const sizeMap = {
     xl: { dot: 80, font: "text-[13px]", pad: "px-3 py-1.5" },
     lg: { dot: 64, font: "text-[12px]", pad: "px-2.5 py-1.5" },
@@ -173,6 +238,7 @@ function TopicNode({ topic, index }: { topic: Topic; index: number }) {
       }}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
+      onClick={onTap}
       className="absolute -translate-x-1/2 -translate-y-1/2 group"
       style={{ left: `${topic.position.x}%`, top: `${topic.position.y}%` }}
     >
@@ -220,58 +286,158 @@ function TopicNode({ topic, index }: { topic: Topic; index: number }) {
   )
 }
 
-function Voices() {
+function Voices({ onSeeAll }: { onSeeAll: () => void }) {
   return (
     <div className="mt-9">
       <div className="px-5 flex items-baseline justify-between mb-3">
         <h2 className="font-display text-[24px] tracking-tight text-ink">
           Voices we trust
         </h2>
-        <button className="text-[12px] font-medium text-ink-3">See all</button>
+        <button
+          onClick={onSeeAll}
+          className="text-[12px] font-medium text-ink-3 hover:text-ink transition-colors"
+        >
+          See all
+        </button>
       </div>
       <div className="px-5 -mr-5 overflow-x-auto no-scrollbar">
         <div className="flex gap-3 pb-2 pr-5">
           {voices.map((v) => (
-            <div
-              key={v.id}
-              className="flex-shrink-0 w-[244px] rounded-2xl bg-paper-2 ring-1 ring-paper-3/70 p-3.5"
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-full bg-ink/8 ring-1 ring-ink/12 flex items-center justify-center text-ink font-display text-[18px]">
-                  {v.name[0]}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-[14px] font-semibold text-ink leading-tight truncate">
-                    {v.name}
-                  </div>
-                  <div className="text-[12px] text-ink-3 truncate">
-                    @{v.handle} · {v.followers}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5 mt-2.5">
-                {/* Vetted = trust/credibility = sage, not signal violet. Signal is Margin/AI. */}
-                <span className="inline-flex items-center gap-1 rounded-full bg-sage-soft text-ink text-[11px] font-medium px-2 py-0.5">
-                  <span className="text-sage">
-                    <CheckGlyph />
-                  </span>
-                  Vetted
-                </span>
-                <span className="text-[11.5px] text-ink-3">
-                  {v.vouchedBy} friends follow
-                </span>
-              </div>
-              <div className="mt-2.5 text-[12.5px] text-ink-2 leading-snug line-clamp-3 text-pretty">
-                "{v.latestTake}"
-              </div>
-              <div className="text-[11.5px] text-ink-3 mt-1.5">{v.beat}</div>
-              <button className="mt-3 w-full rounded-full bg-ink text-paper text-[13px] font-medium py-2">
-                Follow
-              </button>
-            </div>
+            <VoiceCard key={v.id} voice={v} />
           ))}
         </div>
       </div>
+    </div>
+  )
+}
+
+function VoiceCard({ voice }: { voice: Voice }) {
+  const { followedVoiceIds, toggleFollow, toast } = useAppState()
+  const following = followedVoiceIds.has(voice.id)
+  return (
+    <div className="flex-shrink-0 w-[244px] rounded-2xl bg-paper-2 ring-1 ring-paper-3/70 p-3.5">
+      <div className="flex items-center gap-2.5">
+        <div className="w-10 h-10 rounded-full bg-ink/8 ring-1 ring-ink/12 flex items-center justify-center text-ink font-display text-[18px]">
+          {voice.name[0]}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-[14px] font-semibold text-ink leading-tight truncate">
+            {voice.name}
+          </div>
+          <div className="text-[12px] text-ink-3 truncate">
+            @{voice.handle} · {voice.followers}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-1.5 mt-2.5">
+        <span className="inline-flex items-center gap-1 rounded-full bg-sage-soft text-ink text-[11px] font-medium px-2 py-0.5">
+          <span className="text-sage">
+            <CheckGlyph />
+          </span>
+          Vetted
+        </span>
+        <span className="text-[11.5px] text-ink-3">
+          {voice.vouchedBy} friends follow
+        </span>
+      </div>
+      <div className="mt-2.5 text-[12.5px] text-ink-2 leading-snug line-clamp-3 text-pretty">
+        "{voice.latestTake}"
+      </div>
+      <div className="text-[11.5px] text-ink-3 mt-1.5">{voice.beat}</div>
+      <FollowButton
+        following={following}
+        onClick={() => {
+          toggleFollow(voice.id)
+          toast(following ? `Unfollowed ${voice.name}` : `Following ${voice.name}`)
+        }}
+      />
+    </div>
+  )
+}
+
+function FollowButton({
+  following,
+  onClick,
+}: {
+  following: boolean
+  onClick: () => void
+}) {
+  return (
+    <motion.button
+      whileTap={{ scale: 0.97 }}
+      onClick={onClick}
+      className={cn(
+        "mt-3 w-full rounded-full text-[13px] font-medium py-2 transition-colors inline-flex items-center justify-center gap-1.5",
+        following
+          ? "bg-paper ring-1 ring-paper-3 text-ink-2"
+          : "bg-ink text-paper"
+      )}
+    >
+      {following && (
+        <span className="text-sage">
+          <CheckGlyph />
+        </span>
+      )}
+      {following ? "Following" : "Follow"}
+    </motion.button>
+  )
+}
+
+function AllVoicesSheet({ onClose }: { onClose: () => void }) {
+  return (
+    <Sheet
+      title="Voices we trust"
+      subtitle="Vetted by Loop editorial. Tap to follow."
+      onClose={onClose}
+      maxHeightPct={82}
+    >
+      <div className="px-3 pb-4 pt-1">
+        <div className="rounded-2xl bg-paper-2 ring-1 ring-paper-3/70 divide-y divide-paper-3/70 overflow-hidden">
+          {voices.map((v) => (
+            <VoiceRow key={v.id} voice={v} />
+          ))}
+        </div>
+      </div>
+    </Sheet>
+  )
+}
+
+function VoiceRow({ voice }: { voice: Voice }) {
+  const { followedVoiceIds, toggleFollow, toast } = useAppState()
+  const following = followedVoiceIds.has(voice.id)
+  return (
+    <div className="flex items-center gap-3 px-4 py-3.5">
+      <div className="w-11 h-11 rounded-full bg-ink/8 ring-1 ring-ink/12 flex items-center justify-center text-ink font-display text-[19px] flex-shrink-0">
+        {voice.name[0]}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[14.5px] font-semibold text-ink truncate">
+          {voice.name}
+        </div>
+        <div className="text-[12px] text-ink-3 truncate">
+          @{voice.handle} · {voice.beat}
+        </div>
+      </div>
+      <motion.button
+        whileTap={{ scale: 0.96 }}
+        onClick={() => {
+          toggleFollow(voice.id)
+          toast(following ? `Unfollowed ${voice.name}` : `Following ${voice.name}`)
+        }}
+        className={cn(
+          "rounded-full px-3.5 py-1.5 text-[12.5px] font-medium inline-flex items-center gap-1.5 flex-shrink-0",
+          following
+            ? "bg-paper ring-1 ring-paper-3 text-ink-2"
+            : "bg-ink text-paper"
+        )}
+      >
+        {following && (
+          <span className="text-sage">
+            <CheckGlyph />
+          </span>
+        )}
+        {following ? "Following" : "Follow"}
+      </motion.button>
     </div>
   )
 }
@@ -344,12 +510,14 @@ function FramingCard({ framing }: { framing: BlindspotFraming }) {
   )
 }
 
+const NEARBY_LOOPS: { id: string; name: string; members: number; glyph: string }[] = [
+  { id: "nearby-techpolicy", name: "Tech & policy nerds", members: 8, glyph: "◆" },
+  { id: "nearby-housing", name: "SF housing watch", members: 11, glyph: "✦" },
+  { id: "nearby-macro", name: "Macro thread", members: 6, glyph: "▲" },
+]
+
 function NearbyLoops() {
-  const loops = [
-    { name: "Tech & policy nerds", members: 8, glyph: "◆" },
-    { name: "SF housing watch", members: 11, glyph: "✦" },
-    { name: "Macro thread", members: 6, glyph: "▲" },
-  ]
+  const { requestedLoopIds, requestJoin, toast } = useAppState()
   return (
     <div className="mt-9 px-5">
       <h2 className="font-display text-[24px] tracking-tight text-ink mb-1">
@@ -359,25 +527,157 @@ function NearbyLoops() {
         Small group chats your friends are in. Request to join.
       </p>
       <div className="space-y-2">
-        {loops.map((l) => (
-          <div
-            key={l.name}
-            className="flex items-center gap-3 p-3 rounded-2xl bg-paper-2 ring-1 ring-paper-3/70"
-          >
-            {/* Loop glyphs are brand objects, not Margin — keep them in the ink family. */}
-            <div className="w-10 h-10 rounded-2xl bg-ink/8 ring-1 ring-ink/10 flex items-center justify-center text-ink text-[18px] font-display">
-              {l.glyph}
+        {NEARBY_LOOPS.map((l) => {
+          const requested = requestedLoopIds.has(l.id)
+          return (
+            <div
+              key={l.id}
+              className="flex items-center gap-3 p-3 rounded-2xl bg-paper-2 ring-1 ring-paper-3/70"
+            >
+              <div className="w-10 h-10 rounded-2xl bg-ink/8 ring-1 ring-ink/10 flex items-center justify-center text-ink text-[18px] font-display">
+                {l.glyph}
+              </div>
+              <div className="flex-1">
+                <div className="text-[14px] font-semibold text-ink">{l.name}</div>
+                <div className="text-[12px] text-ink-3">
+                  {l.members} people · 2 friends
+                </div>
+              </div>
+              <motion.button
+                whileTap={{ scale: requested ? 1 : 0.96 }}
+                onClick={() => {
+                  if (requested) return
+                  requestJoin(l.id)
+                  toast(`Asked to join ${l.name}`)
+                }}
+                disabled={requested}
+                className={cn(
+                  "rounded-full text-[12px] font-medium px-3 py-1.5 inline-flex items-center gap-1.5 transition-colors",
+                  requested
+                    ? "bg-paper ring-1 ring-paper-3 text-ink-3"
+                    : "bg-ink text-paper"
+                )}
+              >
+                {requested && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-ember" />
+                )}
+                {requested ? "Requested" : "Ask to join"}
+              </motion.button>
             </div>
-            <div className="flex-1">
-              <div className="text-[14px] font-semibold text-ink">{l.name}</div>
-              <div className="text-[12px] text-ink-3">{l.members} people · 2 friends</div>
-            </div>
-            <button className="rounded-full bg-ink text-paper text-[12px] font-medium px-3 py-1.5">
-              Ask to join
-            </button>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
+  )
+}
+
+function EditMapSheet({
+  onClose,
+  onOpenMe,
+}: {
+  onClose: () => void
+  onOpenMe: () => void
+}) {
+  const { interests, topicMutes, toggleInterest, toggleTopicMute } =
+    useAppState()
+  return (
+    <Sheet
+      title="Edit my map"
+      subtitle="Tap once to follow. Tap again to mute. Tomorrow's drop adjusts."
+      onClose={onClose}
+      maxHeightPct={75}
+    >
+      <div className="px-5 pb-5 pt-1">
+        <div className="flex flex-wrap gap-1.5">
+          {topics.map((t) => {
+            const isOn = interests.has(t.id)
+            const isMuted = topicMutes.has(t.id)
+            const state: "on" | "off" | "muted" = isOn
+              ? "on"
+              : isMuted
+                ? "muted"
+                : "off"
+            return (
+              <motion.button
+                key={t.id}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => {
+                  if (isOn) toggleTopicMute(t.id)
+                  else if (isMuted) toggleTopicMute(t.id)
+                  else toggleInterest(t.id)
+                }}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-medium transition-colors",
+                  state === "on" && "bg-ink text-paper ring-1 ring-ink",
+                  state === "off" &&
+                    "bg-paper ring-1 ring-paper-3 text-ink-2 hover:ring-ink/30",
+                  state === "muted" &&
+                    "bg-paper ring-1 ring-paper-3 text-ink-3 line-through decoration-ember/70"
+                )}
+              >
+                {state === "on" && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-sage" />
+                )}
+                {state === "muted" && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-ember/80" />
+                )}
+                {t.label}
+              </motion.button>
+            )
+          })}
+        </div>
+        <button
+          onClick={onOpenMe}
+          className="mt-4 text-[12.5px] font-medium text-ink underline underline-offset-4"
+        >
+          Open full settings on Me →
+        </button>
+      </div>
+    </Sheet>
+  )
+}
+
+function TopicStoriesSheet({
+  topic,
+  onClose,
+  onOpenStory,
+}: {
+  topic: Topic
+  onClose: () => void
+  onOpenStory: (id: string) => void
+}) {
+  const matches = today.filter((s) =>
+    s.category.toLowerCase().includes(topic.label.split(" ")[0]!.toLowerCase())
+  )
+  const fallback = matches.length > 0 ? matches : today.slice(0, 3)
+  return (
+    <Sheet
+      title={topic.label}
+      subtitle={`${topic.newCount} stories this week${
+        topic.live ? " · developing now" : ""
+      }`}
+      onClose={onClose}
+      maxHeightPct={72}
+    >
+      <div className="px-3 pb-4 pt-1">
+        <div className="rounded-2xl bg-paper-2 ring-1 ring-paper-3/70 divide-y divide-paper-3/70 overflow-hidden">
+          {fallback.map((s) => (
+            <motion.button
+              key={s.id}
+              whileTap={{ scale: 0.985 }}
+              onClick={() => onOpenStory(s.id)}
+              className="w-full text-left px-4 py-3.5 hover:bg-paper-3/40"
+            >
+              <div className="text-[11px] font-medium tracking-[0.14em] uppercase text-ink-3 mb-1">
+                {s.category} · {s.readMinutes} min
+              </div>
+              <div className="font-display text-[16px] leading-tight text-ink text-balance">
+                {s.headline}
+              </div>
+            </motion.button>
+          ))}
+        </div>
+      </div>
+    </Sheet>
   )
 }

@@ -3,29 +3,56 @@ import { motion, AnimatePresence } from "motion/react"
 import { today, type Story } from "@/data/content"
 import { MarginPanel, SourceDetail } from "./Margin"
 import { cn } from "@/lib/utils"
+import { useAppState } from "@/state/AppState"
+import { ActionMenu } from "@/components/ui/ActionMenu"
+import { Sheet } from "@/components/ui/Sheet"
 
 export function StoryScreen({
   storyId,
   onBack,
   onMarkRead,
+  nextStoryId,
+  onNextStory,
 }: {
   storyId: string
   onBack: () => void
   onMarkRead: (id: string) => void
+  nextStoryId: string | null
+  onNextStory: () => void
 }) {
   const story = today.find((s) => s.id === storyId) ?? today[0]
+  const nextStory = nextStoryId
+    ? today.find((s) => s.id === nextStoryId) ?? null
+    : null
   const [marginOpen, setMarginOpen] = useState(false)
   const [sourceIdx, setSourceIdx] = useState<number | null>(null)
+  const [shareOpen, setShareOpen] = useState(false)
+  const [sendToLoopOpen, setSendToLoopOpen] = useState(false)
+  const { isBookmarked, toggleBookmark, toast, loops, attachStory } =
+    useAppState()
+  const saved = isBookmarked(story.id)
 
   return (
     <div className="flex-1 flex flex-col relative overflow-hidden">
-      <StoryTopBar story={story} onBack={onBack} />
+      <StoryTopBar
+        story={story}
+        onBack={onBack}
+        saved={saved}
+        onToggleSave={() => {
+          toggleBookmark(story.id)
+          toast(saved ? "Removed from saved" : "Saved")
+        }}
+        onShare={() => setShareOpen(true)}
+      />
 
       <div className="flex-1 overflow-y-auto pb-32">
         <StoryBody
           story={story}
           onMarkRead={onMarkRead}
           onSourceTap={setSourceIdx}
+          nextStory={nextStory}
+          onNextStory={onNextStory}
+          onBack={onBack}
         />
       </div>
 
@@ -42,11 +69,86 @@ export function StoryScreen({
           <SourceDetail
             key={`story-source-${sourceIdx}`}
             source={story.sources[sourceIdx]}
-            // Story view doesn't carry a specific Margin quote, so show the
-            // standfirst — it's what the article promises this source supports.
             quote={story.standfirst}
             onClose={() => setSourceIdx(null)}
           />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {shareOpen && (
+          <ActionMenu
+            title="Share story"
+            subtitle={story.headline}
+            onClose={() => setShareOpen(false)}
+            items={[
+              {
+                label: "Send to a Loop",
+                icon: <PaperPlaneGlyph />,
+                hint: "Share with one of your group chats",
+                onSelect: () => setSendToLoopOpen(true),
+              },
+              {
+                label: "Copy link",
+                icon: <LinkGlyph />,
+                onSelect: () => toast("Link copied"),
+              },
+              {
+                label: saved ? "Remove from saved" : "Save story",
+                icon: <BookmarkGlyph />,
+                onSelect: () => {
+                  toggleBookmark(story.id)
+                  toast(saved ? "Removed from saved" : "Saved")
+                },
+              },
+              {
+                label: "Share to…",
+                icon: <ShareGlyph />,
+                onSelect: () => toast("Share sheet opened"),
+              },
+            ]}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {sendToLoopOpen && (
+          <Sheet
+            title="Send to a Loop"
+            subtitle="Story will appear in the chat with sources attached."
+            onClose={() => setSendToLoopOpen(false)}
+          >
+            <div className="px-3 pb-4 pt-1">
+              <div className="rounded-2xl bg-paper-2 ring-1 ring-paper-3/70 divide-y divide-paper-3/70 overflow-hidden">
+                {loops.map((l) => (
+                  <motion.button
+                    key={l.id}
+                    type="button"
+                    whileTap={{ scale: 0.985 }}
+                    onClick={() => {
+                      attachStory(l.id, story.id)
+                      setSendToLoopOpen(false)
+                      setShareOpen(false)
+                      toast(`Shared to ${l.name}`)
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-paper-3/40"
+                  >
+                    <span className="w-9 h-9 rounded-xl bg-ink/8 ring-1 ring-ink/10 flex items-center justify-center text-ink font-display text-[18px] leading-none">
+                      {l.glyph}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[14px] font-semibold text-ink truncate">
+                        {l.name}
+                      </div>
+                      <div className="text-[12px] text-ink-3">
+                        {l.members.length} members
+                      </div>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          </Sheet>
         )}
       </AnimatePresence>
     </div>
@@ -56,9 +158,15 @@ export function StoryScreen({
 function StoryTopBar({
   story,
   onBack,
+  saved,
+  onToggleSave,
+  onShare,
 }: {
   story: Story
   onBack: () => void
+  saved: boolean
+  onToggleSave: () => void
+  onShare: () => void
 }) {
   return (
     <div className="px-4 pt-3 pb-3 flex items-center justify-between bg-paper/85 backdrop-blur-md relative z-10">
@@ -80,10 +188,10 @@ function StoryTopBar({
         {story.category}
       </div>
       <div className="flex items-center gap-2">
-        <IconButton>
-          <BookmarkGlyph />
+        <IconButton onClick={onToggleSave} active={saved} aria-label="Save story">
+          <BookmarkGlyph filled={saved} />
         </IconButton>
-        <IconButton>
+        <IconButton onClick={onShare} aria-label="Share">
           <ShareGlyph />
         </IconButton>
       </div>
@@ -91,21 +199,69 @@ function StoryTopBar({
   )
 }
 
-function IconButton({ children }: { children: React.ReactNode }) {
+function IconButton({
+  children,
+  onClick,
+  active,
+  "aria-label": ariaLabel,
+}: {
+  children: React.ReactNode
+  onClick?: () => void
+  active?: boolean
+  "aria-label"?: string
+}) {
   return (
-    <button className="w-9 h-9 rounded-full bg-paper-2 ring-1 ring-paper-3 flex items-center justify-center text-ink-2">
+    <motion.button
+      onClick={onClick}
+      whileTap={{ scale: 0.92 }}
+      aria-label={ariaLabel}
+      className={cn(
+        "w-9 h-9 rounded-full ring-1 flex items-center justify-center transition-colors",
+        active
+          ? "bg-ink text-paper ring-ink"
+          : "bg-paper-2 text-ink-2 ring-paper-3 hover:text-ink"
+      )}
+    >
       {children}
-    </button>
+    </motion.button>
   )
 }
 
-function BookmarkGlyph() {
+function BookmarkGlyph({ filled }: { filled?: boolean }) {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
       <path
         d="M3.5 2 h7 v10 l-3.5 -2.5 l-3.5 2.5 z"
         stroke="currentColor"
         strokeWidth="1.4"
+        strokeLinejoin="round"
+        fill={filled ? "currentColor" : "none"}
+      />
+    </svg>
+  )
+}
+
+function PaperPlaneGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path
+        d="M2 7 L12 2 L9 12 L7 8 Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+function LinkGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path
+        d="M5.5 8.5 L8.5 5.5 M6 3.5 L7.5 2 a2 2 0 0 1 2.8 2.8 L8.5 6.5 M6 7.5 L4.5 9 a2 2 0 0 1 -2.8 -2.8 L3.5 4.5"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>
@@ -136,10 +292,16 @@ function StoryBody({
   story,
   onMarkRead,
   onSourceTap,
+  nextStory,
+  onNextStory,
+  onBack,
 }: {
   story: Story
   onMarkRead: (id: string) => void
   onSourceTap: (idx: number) => void
+  nextStory: Story | null
+  onNextStory: () => void
+  onBack: () => void
 }) {
   return (
     <article className="px-5 pt-1">
@@ -178,7 +340,113 @@ function StoryBody({
       >
         Mark as read
       </button>
+
+      <UpNext nextStory={nextStory} onNextStory={onNextStory} onBack={onBack} />
     </article>
+  )
+}
+
+function UpNext({
+  nextStory,
+  onNextStory,
+  onBack,
+}: {
+  nextStory: Story | null
+  onNextStory: () => void
+  onBack: () => void
+}) {
+  if (!nextStory) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "0px 0px -80px 0px" }}
+        transition={{ duration: 0.4, ease: [0.2, 0.7, 0.2, 1] }}
+        className="mt-10 rounded-2xl bg-sage-soft/55 px-4 py-3.5 flex items-center justify-between gap-3"
+      >
+        <div>
+          <div className="text-[11.5px] font-medium tracking-[0.16em] uppercase text-ink-3">
+            You're caught up
+          </div>
+          <div className="text-[13.5px] text-ink-2 mt-0.5">
+            Last story in today's Loop.
+          </div>
+        </div>
+        <button
+          onClick={onBack}
+          className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-paper px-3 py-1.5 text-[12px] font-medium text-ink ring-1 ring-paper-3/70 hover:ring-ink/30 transition-colors"
+        >
+          Back to today
+          <ArrowRightGlyph />
+        </button>
+      </motion.div>
+    )
+  }
+
+  const categoryStyles: Record<Story["categoryColor"], string> = {
+    signal: "bg-ink/5 text-ink-2",
+    ember: "bg-ember-soft text-ember",
+    sage: "bg-sage-soft text-ink-2",
+    ink: "bg-ink/8 text-ink",
+  }
+
+  return (
+    <motion.button
+      type="button"
+      onClick={onNextStory}
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "0px 0px -80px 0px" }}
+      transition={{ duration: 0.4, ease: [0.2, 0.7, 0.2, 1] }}
+      whileTap={{ scale: 0.985 }}
+      className="mt-10 block w-full text-left rounded-2xl bg-paper-2 ring-1 ring-paper-3/70 p-4 hover:ring-ink/20 transition-colors"
+    >
+      <div className="flex items-center justify-between mb-2.5">
+        <span className="text-[11.5px] font-medium tracking-[0.16em] uppercase text-ink-3">
+          Up next
+        </span>
+        <span className="tabular text-[12px] font-medium text-ink-3">
+          {nextStory.readMinutes} min
+        </span>
+      </div>
+
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide mb-2",
+              categoryStyles[nextStory.categoryColor]
+            )}
+          >
+            {nextStory.isLive && (
+              <span className="w-1.5 h-1.5 rounded-full bg-ember animate-pulse" />
+            )}
+            <span>{nextStory.category}</span>
+          </div>
+          <h3 className="font-display text-[22px] leading-[1.12] tracking-tight text-ink text-balance">
+            {nextStory.headline}
+          </h3>
+        </div>
+        <span className="shrink-0 inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-signal-soft px-2.5 py-1 text-[12px] font-medium text-signal">
+          <SparkleGlyph />
+          Read
+        </span>
+      </div>
+    </motion.button>
+  )
+}
+
+function ArrowRightGlyph() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+      <path
+        d="M2 6 H10 M7 3 L10 6 L7 9"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   )
 }
 

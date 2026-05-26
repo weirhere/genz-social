@@ -11,6 +11,9 @@ import { LoopsScreen } from "@/components/screens/Loops"
 import { MeScreen } from "@/components/screens/Me"
 import { LoomSidecar } from "@/components/LoomPlayer"
 import { ALL_LOOMS } from "@/data/looms"
+import { useAppState } from "@/state/AppState"
+import { ToastViewport } from "@/components/ui/Toast"
+import { today } from "@/data/content"
 
 // lg breakpoint matches Tailwind's 1024px — below it the phone owns the
 // whole canvas and the sidecar would be cramped, so we fall through to the
@@ -33,7 +36,7 @@ type View =
 
 export function Prototype() {
   const [view, setView] = useState<View>({ kind: "tab", tab: "today" })
-  const [readIds, setReadIds] = useState<Set<string>>(() => new Set())
+  const { readIds, markRead } = useAppState()
   const isDesktop = useIsDesktop()
 
   const activeTab = view.kind === "tab" ? view.tab : view.from
@@ -42,11 +45,7 @@ export function Prototype() {
 
   const openStory = (id: string) => {
     setView({ kind: "story", id, from: activeTab })
-    setReadIds((prev) => {
-      const next = new Set(prev)
-      next.add(id)
-      return next
-    })
+    markRead(id)
   }
 
   const closeStory = () =>
@@ -78,7 +77,7 @@ export function Prototype() {
               )}
               {view.kind === "tab" && view.tab === "discover" && (
                 <ScreenFrame key="discover">
-                  <DiscoverScreen />
+                  <DiscoverScreen onOpenStory={openStory} onSwitchTab={switchTab} />
                 </ScreenFrame>
               )}
               {view.kind === "tab" && view.tab === "loops" && (
@@ -88,30 +87,34 @@ export function Prototype() {
               )}
               {view.kind === "tab" && view.tab === "me" && (
                 <ScreenFrame key="me">
-                  <MeScreen />
+                  <MeScreen onSwitchTab={switchTab} />
                 </ScreenFrame>
               )}
-              {view.kind === "story" && (
-                <ScreenFrame key={`story-${view.id}`}>
-                  <StoryScreen
-                    storyId={view.id}
-                    onBack={closeStory}
-                    onMarkRead={(id) => {
-                      setReadIds((prev) => {
-                        const next = new Set(prev)
-                        next.add(id)
-                        return next
-                      })
-                    }}
-                  />
-                </ScreenFrame>
-              )}
+              {view.kind === "story" && (() => {
+                const idx = today.findIndex((s) => s.id === view.id)
+                const nextStoryId =
+                  idx >= 0 && idx < today.length - 1 ? today[idx + 1].id : null
+                return (
+                  <ScreenFrame key={`story-${view.id}`}>
+                    <StoryScreen
+                      storyId={view.id}
+                      onBack={closeStory}
+                      onMarkRead={markRead}
+                      nextStoryId={nextStoryId}
+                      onNextStory={() => {
+                        if (nextStoryId) openStory(nextStoryId)
+                      }}
+                    />
+                  </ScreenFrame>
+                )
+              })()}
             </AnimatePresence>
           </div>
 
             {view.kind !== "story" && (
               <BottomNav active={activeTab} onChange={switchTab} />
             )}
+            <ToastViewport />
           </PhoneShell>
         </div>
       </div>
