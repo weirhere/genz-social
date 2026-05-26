@@ -1,7 +1,10 @@
-import { motion } from "motion/react"
+import { useState } from "react"
+import { AnimatePresence, motion } from "motion/react"
 import { today, editorsBrief, type Story } from "@/data/content"
 import { cn } from "@/lib/utils"
 import { EASE_CONTENT, STAGGER } from "@/lib/motion"
+import { Sheet } from "@/components/ui/Sheet"
+import { useAppState, type Settings } from "@/state/AppState"
 
 export function TodayScreen({
   readIds,
@@ -16,9 +19,22 @@ export function TodayScreen({
     .filter((s) => !readIds.has(s.id))
     .reduce((acc, s) => acc + s.readMinutes, 0)
 
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [pickerKey, setPickerKey] = useState<keyof Settings | null>(null)
+
   return (
     <div className="flex-1 overflow-y-auto pb-28">
-      <Header />
+      <Header onOpenSettings={() => setSettingsOpen(true)} />
+      <SettingsSheets
+        open={settingsOpen}
+        onClose={() => {
+          setSettingsOpen(false)
+          setPickerKey(null)
+        }}
+        pickerKey={pickerKey}
+        onOpenPicker={setPickerKey}
+        onClosePicker={() => setPickerKey(null)}
+      />
       <EditorsBrief brief={editorsBrief} />
       <ProgressDial
         read={readCount}
@@ -54,7 +70,7 @@ export function TodayScreen({
   )
 }
 
-function Header() {
+function Header({ onOpenSettings }: { onOpenSettings: () => void }) {
   return (
     <div className="px-5 pt-3 pb-2">
       <div className="flex items-center justify-between">
@@ -64,17 +80,149 @@ function Header() {
             Thursday · May 21
           </span>
         </div>
-        <button
-          className="w-9 h-9 rounded-full bg-paper-2 ring-1 ring-paper-3 flex items-center justify-center text-ink-2"
+        <motion.button
+          whileTap={{ scale: 0.92 }}
+          onClick={onOpenSettings}
+          className="w-9 h-9 rounded-full bg-paper-2 ring-1 ring-paper-3 flex items-center justify-center text-ink-2 hover:text-ink transition-colors"
           aria-label="Settings"
         >
           <SettingsGlyph />
-        </button>
+        </motion.button>
       </div>
       <h1 className="font-display text-[44px] leading-[1.02] tracking-tight text-ink mt-3">
         Morning, Olivia.
       </h1>
     </div>
+  )
+}
+
+const SETTING_OPTIONS: Record<keyof Settings, string[]> = {
+  storyCount: ["5", "7", "10", "12"],
+  dropTime: ["5:30 AM", "6:00 AM", "7:00 AM", "8:00 AM"],
+  tone: ["Conversational", "Newsroom", "Lean & dry"],
+}
+
+const SETTING_LABEL: Record<keyof Settings, string> = {
+  storyCount: "Story count per day",
+  dropTime: "Drop time",
+  tone: "Tone",
+}
+
+function SettingsSheets({
+  open,
+  onClose,
+  pickerKey,
+  onOpenPicker,
+  onClosePicker,
+}: {
+  open: boolean
+  onClose: () => void
+  pickerKey: keyof Settings | null
+  onOpenPicker: (key: keyof Settings) => void
+  onClosePicker: () => void
+}) {
+  const { settings, updateSetting, toast } = useAppState()
+  return (
+    <>
+      <AnimatePresence>
+        {open && (
+          <Sheet
+            title="Loop settings"
+            subtitle="Quick controls. Full calibration lives on Me."
+            onClose={onClose}
+          >
+            <div className="px-3 pb-4 pt-1">
+              <div className="rounded-2xl bg-paper-2 ring-1 ring-paper-3/70 divide-y divide-paper-3/70 overflow-hidden">
+                {(Object.keys(SETTING_OPTIONS) as (keyof Settings)[]).map(
+                  (key) => (
+                    <button
+                      key={key}
+                      onClick={() => onOpenPicker(key)}
+                      className="w-full flex items-center justify-between px-4 py-3.5 text-left hover:bg-paper-3/40"
+                    >
+                      <div>
+                        <div className="text-[14px] font-medium text-ink">
+                          {SETTING_LABEL[key]}
+                        </div>
+                        <div className="text-[11.5px] text-ink-3 mt-0.5">
+                          {SETTING_OPTIONS[key].length} options
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[13.5px] font-medium text-ink-2">
+                        {settings[key]}
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 12 12"
+                          fill="none"
+                          className="text-ink-3"
+                        >
+                          <path
+                            d="M4.5 3 L7.5 6 L4.5 9"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      </div>
+                    </button>
+                  )
+                )}
+              </div>
+              <p className="mt-3 px-2 text-[11.5px] text-ink-3 leading-snug">
+                Loop is anti-notification by design. Settings stay quiet.
+              </p>
+            </div>
+          </Sheet>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {pickerKey && (
+          <Sheet
+            title={SETTING_LABEL[pickerKey]}
+            subtitle="Pick one. You can change this anytime."
+            onClose={onClosePicker}
+          >
+            <div className="px-3 pb-4 pt-1">
+              <div className="rounded-2xl bg-paper-2 ring-1 ring-paper-3/70 divide-y divide-paper-3/70 overflow-hidden">
+                {SETTING_OPTIONS[pickerKey].map((opt) => {
+                  const selected = settings[pickerKey] === opt
+                  return (
+                    <motion.button
+                      key={opt}
+                      whileTap={{ scale: 0.985 }}
+                      onClick={() => {
+                        updateSetting(pickerKey, opt)
+                        toast(`${SETTING_LABEL[pickerKey]} → ${opt}`)
+                        onClosePicker()
+                      }}
+                      className="w-full flex items-center justify-between px-4 py-3.5 text-left hover:bg-paper-3/40"
+                    >
+                      <span className="text-[14.5px] text-ink">{opt}</span>
+                      {selected && (
+                        <span className="w-5 h-5 rounded-full bg-sage flex items-center justify-center">
+                          <svg width="11" height="11" viewBox="0 0 11 11">
+                            <path
+                              d="M2 5.5 L4.5 8 L9 3"
+                              stroke="white"
+                              strokeWidth="1.6"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              fill="none"
+                            />
+                          </svg>
+                        </span>
+                      )}
+                    </motion.button>
+                  )
+                })}
+              </div>
+            </div>
+          </Sheet>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
 
