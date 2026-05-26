@@ -305,7 +305,7 @@ function ReadMoreButton() {
   // The CTA pill on each story card. Signal-violet wash is the one place this
   // color earns its keep on the Today feed.
   return (
-    <div className="inline-flex items-center gap-1 rounded-full bg-signal-soft px-2.5 py-1 text-[12px] font-medium text-signal">
+    <div className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-signal-soft px-2.5 py-1 text-[12px] font-medium text-signal">
       <SparkleGlyph />
       Read more
     </div>
